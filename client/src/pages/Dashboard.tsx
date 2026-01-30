@@ -7,6 +7,7 @@ import { Wallet, TrendingUp, TrendingDown, PiggyBank, ArrowUpRight, ArrowDownRig
 import { format } from "date-fns";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 
 export default function Dashboard() {
   const { data, isLoading } = useDashboard();
