@@ -1,5 +1,6 @@
 import { useDashboard } from "@/features/dashboard";
 import { KPICard } from "@/shared/components/KPICard";
+import { useMoneyFormatter } from "@/shared";
 import { AddTransactionModal } from "@/features/transactions";
 import { AppShell } from "@/app/AppShell";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from "recharts";
@@ -11,6 +12,7 @@ import { cn } from "@/shared/lib/utils";
 
 export default function Dashboard() {
   const { data, isLoading } = useDashboard();
+  const { formatter } = useMoneyFormatter();
 
   if (isLoading) return <DashboardSkeleton />;
 
@@ -34,19 +36,19 @@ export default function Dashboard() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <KPICard 
             title="Total Balance" 
-            value={`$${Number(data?.totalBalance || 0).toLocaleString()}`} 
+            value={formatter.format(Number(data?.totalBalance || 0))} 
             icon={Wallet} 
             color="primary"
           />
           <KPICard 
             title="Net Worth" 
-            value={`$${Number(data?.netWorth || 0).toLocaleString()}`} 
+            value={formatter.format(Number(data?.netWorth || 0))} 
             icon={PiggyBank} 
             color="secondary"
           />
           <KPICard 
             title="Monthly Income" 
-            value={`$${Number(data?.monthlyIncome || 0).toLocaleString()}`} 
+            value={formatter.format(Number(data?.monthlyIncome || 0))} 
             icon={TrendingUp} 
             color="accent"
             trend="+2.5%"
@@ -54,7 +56,7 @@ export default function Dashboard() {
           />
           <KPICard 
             title="Monthly Expenses" 
-            value={`$${Number(data?.monthlyExpenses || 0).toLocaleString()}`} 
+            value={formatter.format(Number(data?.monthlyExpenses || 0))} 
             icon={TrendingDown} 
             color="destructive"
             trend="-1.2%"
@@ -116,7 +118,7 @@ export default function Dashboard() {
                       "font-semibold text-sm",
                       t.type === 'income' ? "text-emerald-600" : "text-foreground"
                     )}>
-                      {t.type === 'income' ? "+" : "-"}${Number(t.amount).toLocaleString()}
+                      {t.type === 'income' ? "+" : "-"}{formatter.format(Number(t.amount))}
                     </span>
                   </div>
                 ))}

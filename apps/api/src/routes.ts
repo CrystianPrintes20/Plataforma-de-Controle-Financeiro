@@ -8,6 +8,7 @@ import {
   registerDashboardRoutes,
   registerGoalRoutes,
   registerInvestmentRoutes,
+  registerSettingsRoutes,
   registerTransactionRoutes,
 } from "./modules";
 
@@ -25,6 +26,7 @@ export async function registerRoutes(
   registerInvestmentRoutes(app);
   registerGoalRoutes(app);
   registerDashboardRoutes(app);
+  registerSettingsRoutes(app);
 
   return httpServer;
 }

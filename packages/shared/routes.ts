@@ -27,6 +27,20 @@ export const errorSchemas = {
 
 // API Contract
 export const api = {
+  settings: {
+    currency: {
+      method: 'GET' as const,
+      path: '/api/settings/currency',
+      input: z.object({
+        currency: z.enum(["BRL", "USD"]),
+      }).optional(),
+      responses: {
+        200: z.object({
+          currency: z.enum(["BRL", "USD"]),
+        }),
+      },
+    },
+  },
   // --- Dashboard ---
   dashboard: {
     get: {

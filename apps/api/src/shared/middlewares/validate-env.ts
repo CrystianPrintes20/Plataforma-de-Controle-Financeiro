@@ -28,6 +28,10 @@ const envSchema = z.object({
     emptyToUndefined,
     z.string().min(4).default("dev-password")
   ),
+  CURRENCY: z.preprocess(
+    emptyToUndefined,
+    z.enum(["BRL", "USD"]).default("BRL")
+  ),
 });
 
 export type Env = z.infer<typeof envSchema>;

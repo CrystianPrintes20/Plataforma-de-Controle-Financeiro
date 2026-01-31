@@ -10,4 +10,5 @@ export const env = {
   sessionSecret: parsed.SESSION_SECRET,
   authEmail: parsed.AUTH_EMAIL,
   authPassword: parsed.AUTH_PASSWORD,
+  currency: parsed.CURRENCY,
 };

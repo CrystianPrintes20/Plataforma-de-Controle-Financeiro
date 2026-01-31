@@ -7,8 +7,10 @@ import { useAuth } from "@/features/auth";
 import { Loader2 } from "lucide-react";
 
 import { DashboardPage } from "@/features/dashboard";
+import { InvestmentsPage } from "@/features/investments";
 import { TransactionsPage } from "@/features/transactions";
 import { AccountsPage } from "@/features/accounts";
+import { SettingsPage } from "@/features/settings";
 import { AuthPage } from "@/features/auth";
 import NotFoundPage from "@/app/NotFoundPage";
 
@@ -36,8 +38,9 @@ function Router() {
       <Route path="/" component={() => <ProtectedRoute component={DashboardPage} />} />
       <Route path="/transactions" component={() => <ProtectedRoute component={TransactionsPage} />} />
       <Route path="/accounts" component={() => <ProtectedRoute component={AccountsPage} />} />
+      <Route path="/investments" component={() => <ProtectedRoute component={InvestmentsPage} />} />
+      <Route path="/settings" component={() => <ProtectedRoute component={SettingsPage} />} />
       {/* Fallback for other routes not yet implemented but linked in nav */}
-      <Route path="/investments" component={() => <ProtectedRoute component={() => <div className="p-8">Investments Coming Soon</div>} />} />
       <Route path="/debts" component={() => <ProtectedRoute component={() => <div className="p-8">Debts Coming Soon</div>} />} />
       <Route path="/goals" component={() => <ProtectedRoute component={() => <div className="p-8">Goals Coming Soon</div>} />} />
       

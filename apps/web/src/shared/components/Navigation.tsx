@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { LayoutDashboard, Receipt, CreditCard, PieChart, TrendingUp, Target, LogOut, Wallet } from "lucide-react";
+import { LayoutDashboard, Receipt, CreditCard, PieChart, TrendingUp, Target, LogOut, Wallet, Settings } from "lucide-react";
 import { useAuth } from "@/features/auth";
 import { cn } from "@/shared/lib/utils";
 import { Button } from "@/shared/ui/button";
@@ -15,6 +15,7 @@ export function Navigation() {
     { href: "/investments", label: "Investments", icon: TrendingUp },
     { href: "/debts", label: "Debts", icon: CreditCard },
     { href: "/goals", label: "Goals", icon: Target },
+    { href: "/settings", label: "Settings", icon: Settings },
   ];
 
   return (

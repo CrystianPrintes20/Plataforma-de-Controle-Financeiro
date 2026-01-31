@@ -110,6 +110,22 @@ export const insertGoalSchema = createInsertSchema(goals).omit({ id: true, creat
 export type Goal = typeof goals.$inferSelect;
 export type InsertGoal = z.infer<typeof insertGoalSchema>;
 
+// --- App Settings ---
+export const appSettings = pgTable("app_settings", {
+  id: serial("id").primaryKey(),
+  currency: text("currency", { enum: ["BRL", "USD"] })
+    .notNull()
+    .default("BRL"),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertAppSettingsSchema = createInsertSchema(appSettings).omit({
+  id: true,
+  updatedAt: true,
+});
+export type AppSettings = typeof appSettings.$inferSelect;
+export type InsertAppSettings = z.infer<typeof insertAppSettingsSchema>;
+
 // --- Relations ---
 
 export const accountsRelations = relations(accounts, ({ one, many }) => ({

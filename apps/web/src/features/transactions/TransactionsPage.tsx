@@ -8,12 +8,14 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { format } from "date-fns";
 import { useState } from "react";
 import { Button } from "@/shared/ui/button";
+import { useMoneyFormatter } from "@/shared";
 import { Trash2 } from "lucide-react";
 
 export default function Transactions() {
   const [filterType, setFilterType] = useState<"income" | "expense" | "transfer" | undefined>();
   const { data: transactions, isLoading } = useTransactions({ type: filterType });
   const { mutate: deleteTransaction } = useDeleteTransaction();
+  const { formatter } = useMoneyFormatter();
 
   return (
     <AppShell>
@@ -71,7 +73,7 @@ export default function Transactions() {
                         </span>
                       </TableCell>
                       <TableCell className={`text-right font-medium ${t.type === 'income' ? 'text-emerald-600' : ''}`}>
-                        {t.type === 'income' ? '+' : '-'}${Number(t.amount).toLocaleString()}
+                        {t.type === 'income' ? '+' : '-'}{formatter.format(Number(t.amount))}
                       </TableCell>
                       <TableCell>
                         <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={() => deleteTransaction(t.id)}>

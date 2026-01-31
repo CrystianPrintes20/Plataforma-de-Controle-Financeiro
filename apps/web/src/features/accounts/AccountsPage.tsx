@@ -8,6 +8,7 @@ import { Label } from "@/shared/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/ui/select";
 import { Plus, CreditCard, Landmark, Banknote, Trash2 } from "lucide-react";
 import { useState } from "react";
+import { useMoneyFormatter } from "@/shared";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertAccountSchema } from "@shared/schema";
@@ -23,6 +24,7 @@ type FormValues = z.infer<typeof formSchema>;
 export default function Accounts() {
   const { data: accounts, isLoading } = useAccounts();
   const { mutate: deleteAccount } = useDeleteAccount();
+  const { formatter } = useMoneyFormatter();
 
   const getIcon = (type: string) => {
     switch (type) {
@@ -65,7 +67,7 @@ export default function Accounts() {
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold font-display mt-2">
-                    ${Number(account.balance).toLocaleString()}
+                    {formatter.format(Number(account.balance))}
                   </div>
                   <p className="text-xs text-muted-foreground capitalize mt-1">
                     {account.type} Account
