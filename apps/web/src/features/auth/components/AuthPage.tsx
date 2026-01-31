@@ -25,7 +25,7 @@ export default function AuthPage() {
       });
 
       if (!response.ok) {
-        throw new Error("Invalid credentials");
+        throw new Error("Credenciais inválidas");
       }
 
       window.location.href = "/";
@@ -60,31 +60,31 @@ export default function AuthPage() {
           
           <div className="space-y-8 max-w-lg">
             <h2 className="text-5xl font-display font-bold leading-tight">
-              Master your money with clarity and confidence.
+              Controle seu dinheiro com clareza e confiança.
             </h2>
             <p className="text-lg text-slate-300">
-              The all-in-one platform to track expenses, monitor investments, and crush your financial goals.
+              Plataforma completa para acompanhar despesas, investimentos e metas financeiras.
             </p>
 
             <div className="space-y-4">
               <div className="flex items-center gap-3">
                 <CheckCircle2 className="h-6 w-6 text-emerald-400" />
-                <span className="text-slate-200">Real-time net worth tracking</span>
+                <span className="text-slate-200">Patrimônio em tempo real</span>
               </div>
               <div className="flex items-center gap-3">
                 <CheckCircle2 className="h-6 w-6 text-emerald-400" />
-                <span className="text-slate-200">Unified investment dashboard</span>
+                <span className="text-slate-200">Painel unificado de investimentos</span>
               </div>
               <div className="flex items-center gap-3">
                 <CheckCircle2 className="h-6 w-6 text-emerald-400" />
-                <span className="text-slate-200">Smart goal setting & tracking</span>
+                <span className="text-slate-200">Metas inteligentes e acompanhamento</span>
               </div>
             </div>
           </div>
         </div>
 
         <div className="relative z-10 text-sm text-slate-400">
-          © 2024 Finance OS. All rights reserved.
+          © 2024 Finance OS. Todos os direitos reservados.
         </div>
       </div>
 
@@ -98,14 +98,14 @@ export default function AuthPage() {
               </div>
             </div>
             <h1 className="text-3xl font-display font-bold">Finance OS</h1>
-            <p className="text-muted-foreground">Welcome back.</p>
+            <p className="text-muted-foreground">Bem-vindo de volta.</p>
           </div>
 
           <Card className="border-border shadow-xl">
             <CardHeader className="text-center space-y-1">
-              <CardTitle className="text-2xl font-bold">Sign in</CardTitle>
+              <CardTitle className="text-2xl font-bold">Entrar</CardTitle>
               <CardDescription>
-                Access your dashboard securely
+                Acesse seu painel com segurança
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -160,7 +160,7 @@ export default function AuthPage() {
                 </div>
                 <div className="relative flex justify-center text-xs uppercase">
                   <span className="bg-card px-2 text-muted-foreground">
-                    Secure Access
+                    Acesso seguro
                   </span>
                 </div>
               </div>
@@ -168,7 +168,7 @@ export default function AuthPage() {
               <div className="flex justify-center gap-8 text-muted-foreground">
                 <div className="flex flex-col items-center gap-2">
                   <ShieldCheck className="h-8 w-8 text-emerald-500/50" />
-                  <span className="text-xs">Bank-grade Security</span>
+                  <span className="text-xs">Segurança nível bancário</span>
                 </div>
               </div>
             </CardContent>

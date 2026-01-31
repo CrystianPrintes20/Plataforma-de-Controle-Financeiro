@@ -110,6 +110,44 @@ export const insertGoalSchema = createInsertSchema(goals).omit({ id: true, creat
 export type Goal = typeof goals.$inferSelect;
 export type InsertGoal = z.infer<typeof insertGoalSchema>;
 
+// --- Fixed Incomes ---
+export const fixedIncomes = pgTable("fixed_incomes", {
+  id: serial("id").primaryKey(),
+  userId: text("user_id").notNull().references(() => users.id),
+  name: text("name").notNull(),
+  amount: numeric("amount", { precision: 12, scale: 2 }).notNull(),
+  dayOfMonth: integer("day_of_month").notNull(),
+  accountId: integer("account_id").notNull().references(() => accounts.id),
+  categoryId: integer("category_id").references(() => categories.id),
+  startsAt: timestamp("starts_at").notNull().defaultNow(),
+  endsAt: timestamp("ends_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertFixedIncomeSchema = createInsertSchema(fixedIncomes).omit({
+  id: true,
+  createdAt: true,
+  endsAt: true,
+});
+export type FixedIncome = typeof fixedIncomes.$inferSelect;
+export type InsertFixedIncome = z.infer<typeof insertFixedIncomeSchema>;
+
+// --- App Settings ---
+export const appSettings = pgTable("app_settings", {
+  id: serial("id").primaryKey(),
+  currency: text("currency", { enum: ["BRL", "USD"] })
+    .notNull()
+    .default("BRL"),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertAppSettingsSchema = createInsertSchema(appSettings).omit({
+  id: true,
+  updatedAt: true,
+});
+export type AppSettings = typeof appSettings.$inferSelect;
+export type InsertAppSettings = z.infer<typeof insertAppSettingsSchema>;
+
 // --- Relations ---
 
 export const accountsRelations = relations(accounts, ({ one, many }) => ({

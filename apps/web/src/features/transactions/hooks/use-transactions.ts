@@ -4,13 +4,16 @@ import type { InsertTransaction } from "@shared/schema";
 import { useToast } from "@/shared/hooks/use-toast";
 import { apiGet, apiSend } from "@/shared/lib/api";
 
-type TransactionFilters = {
+export type TransactionFilters = {
   startDate?: string;
   endDate?: string;
   accountId?: number;
   categoryId?: number;
   type?: "income" | "expense" | "transfer";
 };
+
+type ClientInsertTransaction = Omit<InsertTransaction, "userId">;
+type ClientUpdateTransaction = Partial<Omit<InsertTransaction, "userId">>;
 
 export function useTransactions(filters?: TransactionFilters) {
   return useQuery({
@@ -22,7 +25,6 @@ export function useTransactions(filters?: TransactionFilters) {
           if (value !== undefined) url.searchParams.append(key, String(value));
         });
       }
-      
       return apiGet(url.toString(), api.transactions.list.responses[200]);
     },
   });
@@ -33,13 +35,13 @@ export function useCreateTransaction() {
   const { toast } = useToast();
 
   return useMutation({
-    mutationFn: async (data: InsertTransaction) => {
+    mutationFn: async (data: ClientInsertTransaction) => {
       const formattedData = {
         ...data,
         amount: String(data.amount),
         accountId: Number(data.accountId),
         categoryId: data.categoryId ? Number(data.categoryId) : undefined,
-        date: new Date(data.date).toISOString(), // Ensure date is ISO string
+        date: data.date instanceof Date ? data.date.toISOString() : data.date,
       };
 
       return apiSend(
@@ -52,11 +54,43 @@ export function useCreateTransaction() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [api.transactions.list.path] });
       queryClient.invalidateQueries({ queryKey: [api.dashboard.get.path] });
-      queryClient.invalidateQueries({ queryKey: [api.accounts.list.path] }); // Balances change
-      toast({ title: "Transaction Added", description: "Transaction recorded successfully." });
+      queryClient.invalidateQueries({ queryKey: [api.accounts.list.path] });
+      toast({ title: "Transação criada", description: "Transação registrada com sucesso." });
     },
     onError: (err) => {
-      toast({ title: "Error", description: err.message, variant: "destructive" });
+      toast({ title: "Erro", description: err.message, variant: "destructive" });
+    },
+  });
+}
+
+export function useUpdateTransaction() {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: async ({ id, payload }: { id: number; payload: ClientUpdateTransaction }) => {
+      const formattedData = {
+        ...payload,
+        amount: payload.amount !== undefined ? String(payload.amount) : undefined,
+        accountId: payload.accountId !== undefined ? Number(payload.accountId) : undefined,
+        categoryId: payload.categoryId ? Number(payload.categoryId) : undefined,
+        date:
+          payload.date instanceof Date
+            ? payload.date.toISOString()
+            : payload.date,
+      };
+
+      const url = buildUrl(api.transactions.update.path, { id });
+      return apiSend(url, "PUT", api.transactions.update.responses[200], formattedData);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [api.transactions.list.path] });
+      queryClient.invalidateQueries({ queryKey: [api.dashboard.get.path] });
+      queryClient.invalidateQueries({ queryKey: [api.accounts.list.path] });
+      toast({ title: "Atualizado", description: "Transação atualizada com sucesso." });
+    },
+    onError: (err) => {
+      toast({ title: "Erro", description: err.message, variant: "destructive" });
     },
   });
 }
@@ -74,7 +108,7 @@ export function useDeleteTransaction() {
       queryClient.invalidateQueries({ queryKey: [api.transactions.list.path] });
       queryClient.invalidateQueries({ queryKey: [api.dashboard.get.path] });
       queryClient.invalidateQueries({ queryKey: [api.accounts.list.path] });
-      toast({ title: "Transaction Deleted", description: "Transaction removed successfully." });
+      toast({ title: "Transação removida", description: "Transação removida com sucesso." });
     },
   });
 }

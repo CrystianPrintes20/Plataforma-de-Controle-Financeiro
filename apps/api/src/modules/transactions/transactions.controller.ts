@@ -42,6 +42,27 @@ export function registerTransactionRoutes(
     }
   });
 
+  app.put(api.transactions.update.path, isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user!.claims.sub;
+      const input = api.transactions.update.input.parse(req.body);
+      const tx = await service.update(Number(req.params.id), userId, input);
+      if (!tx) {
+        return res
+          .status(HTTP_STATUS.NOT_FOUND)
+          .json(fail("Transaction not found"));
+      }
+      res.json(ok(tx));
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res
+          .status(HTTP_STATUS.BAD_REQUEST)
+          .json(fail("Validation error", err.errors));
+      }
+      throw err;
+    }
+  });
+
   app.delete(api.transactions.delete.path, isAuthenticated, async (req: any, res) => {
     const userId = req.user!.claims.sub;
     await service.delete(Number(req.params.id), userId);

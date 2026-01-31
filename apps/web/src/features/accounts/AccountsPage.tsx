@@ -1,4 +1,4 @@
-import { useAccounts, useCreateAccount, useDeleteAccount } from "@/features/accounts";
+import { useAccounts, useCreateAccount, useDeleteAccount, useUpdateAccount } from "@/features/accounts";
 import { AppShell } from "@/app/AppShell";
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/shared/ui/card";
 import { Button } from "@/shared/ui/button";
@@ -6,12 +6,14 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Input } from "@/shared/ui/input";
 import { Label } from "@/shared/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/ui/select";
-import { Plus, CreditCard, Landmark, Banknote, Trash2 } from "lucide-react";
-import { useState } from "react";
+import { Plus, CreditCard, Landmark, Banknote, Trash2, Pencil } from "lucide-react";
+import { useMemo, useState } from "react";
+import { useMoneyFormatter } from "@/shared";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { insertAccountSchema } from "@shared/schema";
+import { insertAccountSchema, type Account } from "@shared/schema";
 import { z } from "zod";
+import { EditAccountModal } from "./components/EditAccountModal";
 
 const formSchema = insertAccountSchema.extend({
   balance: z.coerce.number(),
@@ -23,6 +25,8 @@ type FormValues = z.infer<typeof formSchema>;
 export default function Accounts() {
   const { data: accounts, isLoading } = useAccounts();
   const { mutate: deleteAccount } = useDeleteAccount();
+  const { formatter } = useMoneyFormatter();
+  const [editing, setEditing] = useState<Account | null>(null);
 
   const getIcon = (type: string) => {
     switch (type) {
@@ -44,14 +48,14 @@ export default function Accounts() {
     <AppShell>
         <div className="flex justify-between items-center mb-8">
           <div>
-            <h1 className="text-3xl font-display font-bold text-foreground">Accounts</h1>
-            <p className="text-muted-foreground">Track balances across all your accounts.</p>
+            <h1 className="text-3xl font-display font-bold text-foreground">Contas</h1>
+            <p className="text-muted-foreground">Acompanhe os saldos das suas contas.</p>
           </div>
           <AddAccountModal />
         </div>
 
         {isLoading ? (
-          <div>Loading accounts...</div>
+          <div>Carregando contas...</div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {accounts?.map((account) => (
@@ -65,30 +69,39 @@ export default function Accounts() {
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold font-display mt-2">
-                    ${Number(account.balance).toLocaleString()}
+                    {formatter.format(Number(account.balance))}
                   </div>
                   <p className="text-xs text-muted-foreground capitalize mt-1">
-                    {account.type} Account
+                    {account.type} Conta
                   </p>
                 </CardContent>
-                <CardFooter className="flex justify-end pt-0">
+                <CardFooter className="flex justify-end pt-0 gap-2">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-muted-foreground hover:text-foreground opacity-0 group-hover:opacity-100 transition-opacity"
+                    onClick={() => setEditing(account as Account)}
+                  >
+                    <Pencil className="h-4 w-4 mr-2" />
+                    Editar
+                  </Button>
                   <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => deleteAccount(account.id)}>
                     <Trash2 className="h-4 w-4 mr-2" />
-                    Remove
+                    Remover
                   </Button>
                 </CardFooter>
               </Card>
             ))}
             
-            <AddAccountModal trigger={
-              <button className="h-full min-h-[180px] rounded-xl border-2 border-dashed border-muted-foreground/20 hover:border-primary/50 hover:bg-primary/5 flex flex-col items-center justify-center gap-4 transition-all group">
-                <div className="h-12 w-12 rounded-full bg-muted flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-colors">
-                  <Plus className="h-6 w-6" />
-                </div>
-                <p className="font-medium text-muted-foreground group-hover:text-primary">Add New Account</p>
-              </button>
-            }/>
           </div>
+        )}
+
+        {editing && (
+          <EditAccountModal
+            account={editing}
+            open={!!editing}
+            onOpenChange={(open) => !open && setEditing(null)}
+          />
         )}
     </AppShell>
   );
@@ -97,10 +110,25 @@ export default function Accounts() {
 function AddAccountModal({ trigger }: { trigger?: React.ReactNode }) {
   const [open, setOpen] = useState(false);
   const { mutate, isPending } = useCreateAccount();
+  const { formatter } = useMoneyFormatter();
+  const [amountInput, setAmountInput] = useState("");
   const { register, handleSubmit, formState: { errors }, reset, setValue } = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: { type: "checking" }
   });
+
+  const formattedAmount = useMemo(() => {
+    if (!amountInput) return "";
+    const numeric = Number(amountInput) / 100;
+    return formatter.format(Number.isNaN(numeric) ? 0 : numeric);
+  }, [amountInput, formatter]);
+
+  const handleAmountChange = (value: string) => {
+    const onlyDigits = value.replace(/\D/g, "");
+    setAmountInput(onlyDigits);
+    const numeric = Number(onlyDigits) / 100;
+    setValue("balance", Number.isNaN(numeric) ? 0 : numeric);
+  };
 
   const onSubmit = (data: FormValues) => {
     mutate(
@@ -113,6 +141,7 @@ function AddAccountModal({ trigger }: { trigger?: React.ReactNode }) {
       onSuccess: () => {
         setOpen(false);
         reset();
+        setAmountInput("");
       }
     }
     );
@@ -123,48 +152,51 @@ function AddAccountModal({ trigger }: { trigger?: React.ReactNode }) {
       <DialogTrigger asChild>
         {trigger || (
           <Button className="gap-2 shadow-lg shadow-primary/20">
-            <Plus className="h-4 w-4" /> Add Account
+            <Plus className="h-4 w-4" /> Adicionar conta
           </Button>
         )}
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Add Account</DialogTitle>
+          <DialogTitle>Adicionar conta</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 pt-4">
           <div className="space-y-2">
-            <Label>Account Name</Label>
-            <Input placeholder="e.g. Chase Checking" {...register("name")} />
+            <Label>Nome da conta</Label>
+            <Input placeholder="Ex: Conta salário" {...register("name")} />
             {errors.name && <p className="text-xs text-destructive">{errors.name.message}</p>}
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label>Type</Label>
+              <Label>Tipo</Label>
               <Select onValueChange={(val) => setValue("type", val as any)} defaultValue="checking">
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="checking">Checking</SelectItem>
-                  <SelectItem value="savings">Savings</SelectItem>
-                  <SelectItem value="credit">Credit Card</SelectItem>
-                  <SelectItem value="cash">Cash</SelectItem>
-                  <SelectItem value="investment">Investment</SelectItem>
+                  <SelectItem value="checking">Corrente</SelectItem>
+                  <SelectItem value="savings">Poupança</SelectItem>
+                  <SelectItem value="credit">Cartão de crédito</SelectItem>
+                  <SelectItem value="cash">Dinheiro</SelectItem>
+                  <SelectItem value="investment">Investimento</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-2">
-              <Label>Initial Balance</Label>
-              <div className="relative">
-                <span className="absolute left-3 top-2.5 text-muted-foreground">$</span>
-                <Input type="number" step="0.01" className="pl-7" {...register("balance")} />
-              </div>
+              <Label>Saldo inicial</Label>
+              <Input
+                type="text"
+                inputMode="numeric"
+                value={formattedAmount}
+                onChange={(event) => handleAmountChange(event.target.value)}
+                placeholder={formatter.format(0)}
+              />
             </div>
           </div>
 
           <Button type="submit" className="w-full" disabled={isPending}>
-            {isPending ? "Creating..." : "Create Account"}
+            {isPending ? "Criando..." : "Salvar"}
           </Button>
         </form>
       </DialogContent>

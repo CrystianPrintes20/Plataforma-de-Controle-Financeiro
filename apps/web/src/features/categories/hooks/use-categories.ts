@@ -33,7 +33,7 @@ export function useCreateCategory() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [api.categories.list.path] });
-      toast({ title: "Category Created", description: "New category added successfully." });
+      toast({ title: "Categoria criada", description: "Categoria adicionada com sucesso." });
     },
   });
 }

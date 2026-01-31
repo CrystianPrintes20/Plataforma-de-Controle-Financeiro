@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { LayoutDashboard, Receipt, CreditCard, PieChart, TrendingUp, Target, LogOut, Wallet } from "lucide-react";
+import { LayoutDashboard, Receipt, CreditCard, PieChart, TrendingUp, Target, LogOut, Wallet, Settings } from "lucide-react";
 import { useAuth } from "@/features/auth";
 import { cn } from "@/shared/lib/utils";
 import { Button } from "@/shared/ui/button";
@@ -10,11 +10,13 @@ export function Navigation() {
 
   const navItems = [
     { href: "/", label: "Dashboard", icon: LayoutDashboard },
-    { href: "/transactions", label: "Transactions", icon: Receipt },
-    { href: "/accounts", label: "Accounts", icon: Wallet },
-    { href: "/investments", label: "Investments", icon: TrendingUp },
-    { href: "/debts", label: "Debts", icon: CreditCard },
-    { href: "/goals", label: "Goals", icon: Target },
+    { href: "/transactions", label: "Transações", icon: Receipt },
+    { href: "/accounts", label: "Contas", icon: Wallet },
+    { href: "/income", label: "Ganhos", icon: TrendingUp },
+    { href: "/investments", label: "Investimentos", icon: TrendingUp },
+    { href: "/debts", label: "Dívidas", icon: CreditCard },
+    { href: "/goals", label: "Metas", icon: Target },
+    { href: "/settings", label: "Configurações", icon: Settings },
   ];
 
   return (
@@ -75,7 +77,7 @@ export function Navigation() {
           </div>
           <Button variant="ghost" className="w-full justify-start gap-2 text-muted-foreground hover:text-destructive hover:bg-destructive/10" onClick={() => logout()}>
             <LogOut className="h-4 w-4" />
-            Sign Out
+            Sair
           </Button>
         </div>
       </div>

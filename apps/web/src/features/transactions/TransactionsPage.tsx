@@ -8,19 +8,21 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { format } from "date-fns";
 import { useState } from "react";
 import { Button } from "@/shared/ui/button";
+import { useMoneyFormatter } from "@/shared";
 import { Trash2 } from "lucide-react";
 
 export default function Transactions() {
   const [filterType, setFilterType] = useState<"income" | "expense" | "transfer" | undefined>();
   const { data: transactions, isLoading } = useTransactions({ type: filterType });
   const { mutate: deleteTransaction } = useDeleteTransaction();
+  const { formatter } = useMoneyFormatter();
 
   return (
     <AppShell>
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
           <div>
-            <h1 className="text-3xl font-display font-bold text-foreground">Transactions</h1>
-            <p className="text-muted-foreground">Manage your income and expenses.</p>
+            <h1 className="text-3xl font-display font-bold text-foreground">Transações</h1>
+            <p className="text-muted-foreground">Gerencie receitas e despesas.</p>
           </div>
           <AddTransactionModal />
         </div>
@@ -28,17 +30,17 @@ export default function Transactions() {
         <Card className="border-border/50 shadow-sm">
           <CardHeader>
             <div className="flex items-center justify-between">
-              <CardTitle>History</CardTitle>
+              <CardTitle>Histórico</CardTitle>
               <div className="flex gap-2">
                 <Select onValueChange={(v) => setFilterType(v === "all" ? undefined : v as any)}>
                   <SelectTrigger className="w-[180px]">
-                    <SelectValue placeholder="Filter by type" />
+                    <SelectValue placeholder="Filtrar por tipo" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">All Types</SelectItem>
-                    <SelectItem value="income">Income</SelectItem>
-                    <SelectItem value="expense">Expense</SelectItem>
-                    <SelectItem value="transfer">Transfer</SelectItem>
+                    <SelectItem value="all">Todos</SelectItem>
+                    <SelectItem value="income">Receita</SelectItem>
+                    <SelectItem value="expense">Despesa</SelectItem>
+                    <SelectItem value="transfer">Transferência</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -46,7 +48,7 @@ export default function Transactions() {
           </CardHeader>
           <CardContent>
             {isLoading ? (
-              <div className="py-10 text-center">Loading transactions...</div>
+              <div className="py-10 text-center">Carregando transações...</div>
             ) : (
               <Table>
                 <TableHeader>
@@ -71,7 +73,7 @@ export default function Transactions() {
                         </span>
                       </TableCell>
                       <TableCell className={`text-right font-medium ${t.type === 'income' ? 'text-emerald-600' : ''}`}>
-                        {t.type === 'income' ? '+' : '-'}${Number(t.amount).toLocaleString()}
+                        {t.type === 'income' ? '+' : '-'}{formatter.format(Number(t.amount))}
                       </TableCell>
                       <TableCell>
                         <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={() => deleteTransaction(t.id)}>
@@ -83,7 +85,7 @@ export default function Transactions() {
                   {transactions?.length === 0 && (
                     <TableRow>
                       <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
-                        No transactions found.
+                        Nenhuma transação encontrada.
                       </TableCell>
                     </TableRow>
                   )}

@@ -76,10 +76,31 @@ export class TransactionsRepository {
     return query;
   }
 
+  async getById(id: number): Promise<Transaction | undefined> {
+    const [transaction] = await db
+      .select()
+      .from(transactions)
+      .where(eq(transactions.id, id));
+    return transaction;
+  }
+
   async create(input: InsertTransaction): Promise<Transaction> {
     const [transaction] = await db
       .insert(transactions)
       .values(input)
+      .returning();
+    return transaction;
+  }
+
+  async update(
+    id: number,
+    userId: string,
+    updates: Partial<InsertTransaction>
+  ): Promise<Transaction | undefined> {
+    const [transaction] = await db
+      .update(transactions)
+      .set(updates)
+      .where(and(eq(transactions.id, id), eq(transactions.userId, userId)))
       .returning();
     return transaction;
   }

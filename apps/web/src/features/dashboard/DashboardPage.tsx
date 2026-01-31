@@ -1,5 +1,6 @@
 import { useDashboard } from "@/features/dashboard";
 import { KPICard } from "@/shared/components/KPICard";
+import { useMoneyFormatter } from "@/shared";
 import { AddTransactionModal } from "@/features/transactions";
 import { AppShell } from "@/app/AppShell";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from "recharts";
@@ -11,6 +12,7 @@ import { cn } from "@/shared/lib/utils";
 
 export default function Dashboard() {
   const { data, isLoading } = useDashboard();
+  const { formatter } = useMoneyFormatter();
 
   if (isLoading) return <DashboardSkeleton />;
 
@@ -25,7 +27,7 @@ export default function Dashboard() {
         <header className="flex justify-between items-center mb-8">
           <div>
             <h1 className="text-3xl font-display font-bold text-foreground">Dashboard</h1>
-            <p className="text-muted-foreground">Welcome back, here's your financial overview.</p>
+            <p className="text-muted-foreground">Visão geral das suas finanças.</p>
           </div>
           <AddTransactionModal />
         </header>
@@ -33,28 +35,28 @@ export default function Dashboard() {
         {/* KPIs */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <KPICard 
-            title="Total Balance" 
-            value={`$${Number(data?.totalBalance || 0).toLocaleString()}`} 
+            title="Saldo total" 
+            value={formatter.format(Number(data?.totalBalance || 0))} 
             icon={Wallet} 
             color="primary"
           />
           <KPICard 
-            title="Net Worth" 
-            value={`$${Number(data?.netWorth || 0).toLocaleString()}`} 
+            title="Patrimônio líquido" 
+            value={formatter.format(Number(data?.netWorth || 0))} 
             icon={PiggyBank} 
             color="secondary"
           />
           <KPICard 
-            title="Monthly Income" 
-            value={`$${Number(data?.monthlyIncome || 0).toLocaleString()}`} 
+            title="Receitas do mês" 
+            value={formatter.format(Number(data?.monthlyIncome || 0))} 
             icon={TrendingUp} 
             color="accent"
             trend="+2.5%"
             trendUp={true}
           />
           <KPICard 
-            title="Monthly Expenses" 
-            value={`$${Number(data?.monthlyExpenses || 0).toLocaleString()}`} 
+            title="Despesas do mês" 
+            value={formatter.format(Number(data?.monthlyExpenses || 0))} 
             icon={TrendingDown} 
             color="destructive"
             trend="-1.2%"
@@ -66,7 +68,7 @@ export default function Dashboard() {
           {/* Main Chart */}
           <Card className="lg:col-span-2 border-border/50 shadow-sm">
             <CardHeader>
-              <CardTitle>Recent Activity</CardTitle>
+          <CardTitle>Movimentações recentes</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="h-[300px]">
@@ -94,7 +96,7 @@ export default function Dashboard() {
           {/* Recent Transactions List */}
           <Card className="border-border/50 shadow-sm">
             <CardHeader>
-              <CardTitle>Transactions</CardTitle>
+              <CardTitle>Transações</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-6">
@@ -116,12 +118,12 @@ export default function Dashboard() {
                       "font-semibold text-sm",
                       t.type === 'income' ? "text-emerald-600" : "text-foreground"
                     )}>
-                      {t.type === 'income' ? "+" : "-"}${Number(t.amount).toLocaleString()}
+                      {t.type === 'income' ? "+" : "-"}{formatter.format(Number(t.amount))}
                     </span>
                   </div>
                 ))}
                 {(!data?.recentTransactions || data.recentTransactions.length === 0) && (
-                  <p className="text-muted-foreground text-center py-8">No recent transactions</p>
+                  <p className="text-muted-foreground text-center py-8">Sem transações recentes</p>
                 )}
               </div>
             </CardContent>

@@ -10,9 +10,10 @@ services:
       SESSION_SECRET: ${SESSION_SECRET:-dev-session-secret-change-me}
       AUTH_EMAIL: ${AUTH_EMAIL:-local@dev}
       AUTH_PASSWORD: ${AUTH_PASSWORD:-dev-password}
+      CURRENCY: ${CURRENCY:-BRL}
     ports:
       - "5000:5000"
-    command: sh -c "npm run db:push && npm run dev"
+    command: sh -c "npm run db:push && NODE_ENV=development npx tsx watch apps/api/src/index.ts"
     volumes:
       - .:/app
       - /app/node_modules
