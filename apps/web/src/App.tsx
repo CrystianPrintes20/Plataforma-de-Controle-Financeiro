@@ -33,7 +33,6 @@ function ProtectedRoute({ component: Component }: { component: React.ComponentTy
 function Router() {
   return (
     <Switch>
-      <Route path="/api/login" component={() => { window.location.href = "/api/login"; return null; }} />
       <Route path="/" component={() => <ProtectedRoute component={Dashboard} />} />
       <Route path="/transactions" component={() => <ProtectedRoute component={Transactions} />} />
       <Route path="/accounts" component={() => <ProtectedRoute component={Accounts} />} />

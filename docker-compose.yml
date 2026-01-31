@@ -1,0 +1,41 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: finance_dashboard_app
+    environment:
+      NODE_ENV: development
+      DATABASE_URL: ${DATABASE_URL_DOCKER:-postgres://finance_user:finance_password@postgres:5432/finance_dashboard}
+      SESSION_SECRET: ${SESSION_SECRET:-dev-session-secret-change-me}
+      AUTH_EMAIL: ${AUTH_EMAIL:-local@dev}
+      AUTH_PASSWORD: ${AUTH_PASSWORD:-dev-password}
+    ports:
+      - "5000:5000"
+    command: sh -c "npm run db:push && npm run dev"
+    volumes:
+      - .:/app
+      - /app/node_modules
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: finance_dashboard_db
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-finance_dashboard}
+      POSTGRES_USER: ${POSTGRES_USER:-finance_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-finance_password}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  postgres_data:
