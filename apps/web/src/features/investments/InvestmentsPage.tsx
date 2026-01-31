@@ -4,6 +4,7 @@ import { Skeleton } from "@/shared/ui/skeleton";
 import { KPICard } from "@/shared/components/KPICard";
 import { AddInvestmentModal } from "./components/AddInvestmentModal";
 import { EditInvestmentModal } from "./components/EditInvestmentModal";
+import { ApplyInvestmentModal } from "./components/ApplyInvestmentModal";
 import { useInvestments, useDeleteInvestment } from "./hooks/use-investments";
 import { useMoneyFormatter } from "@/shared";
 import { Building2, Wallet, Pencil, Trash2 } from "lucide-react";
@@ -80,6 +81,7 @@ export default function InvestmentsPage() {
                       </p>
                       <p className="text-xs text-muted-foreground">Saldo atual</p>
                     </div>
+                    <ApplyInvestmentModal investment={inv as Investment} />
                     <Button
                       variant="ghost"
                       size="icon"

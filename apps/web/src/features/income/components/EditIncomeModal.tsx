@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useAccounts } from "@/features/accounts";
 import { useCategories } from "@/features/categories";
 import { useUpdateIncome } from "../hooks/use-income";
+import { useMoneyFormatter } from "@/shared";
 
 const formSchema = insertTransactionSchema.extend({
   amount: z.coerce.number().positive("Informe um valor válido"),
@@ -33,6 +34,8 @@ export function EditIncomeModal({
   const { mutate, isPending } = useUpdateIncome();
   const { data: accounts } = useAccounts();
   const { data: categories } = useCategories();
+  const { formatter } = useMoneyFormatter();
+  const [amountInput, setAmountInput] = useState("");
 
   const { register, handleSubmit, formState: { errors }, reset, setValue } = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -53,9 +56,23 @@ export function EditIncomeModal({
       categoryId: transaction.categoryId ?? undefined,
       date: new Date(transaction.date),
     });
+    const cents = Math.round(Number(transaction.amount) * 100);
+    setAmountInput(Number.isFinite(cents) ? String(cents) : "");
   }, [transaction, reset]);
 
   const incomeCategories = (categories ?? []).filter((cat) => cat.type === "income");
+  const formattedAmount = useMemo(() => {
+    if (!amountInput) return "";
+    const numeric = Number(amountInput) / 100;
+    return formatter.format(Number.isNaN(numeric) ? 0 : numeric);
+  }, [amountInput, formatter]);
+
+  const handleAmountChange = (value: string) => {
+    const onlyDigits = value.replace(/\D/g, "");
+    setAmountInput(onlyDigits);
+    const numeric = Number(onlyDigits) / 100;
+    setValue("amount", Number.isNaN(numeric) ? 0 : numeric);
+  };
 
   const onSubmit = (data: FormValues) => {
     mutate(
@@ -92,7 +109,13 @@ export function EditIncomeModal({
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label>Valor</Label>
-              <Input type="number" step="0.01" {...register("amount")} />
+              <Input
+                type="text"
+                inputMode="numeric"
+                value={formattedAmount}
+                onChange={(event) => handleAmountChange(event.target.value)}
+                placeholder={formatter.format(0)}
+              />
               {errors.amount && <p className="text-xs text-destructive">{errors.amount.message}</p>}
             </div>
             <div className="space-y-2">

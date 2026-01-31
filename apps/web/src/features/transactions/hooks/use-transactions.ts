@@ -12,6 +12,9 @@ export type TransactionFilters = {
   type?: "income" | "expense" | "transfer";
 };
 
+type ClientInsertTransaction = Omit<InsertTransaction, "userId">;
+type ClientUpdateTransaction = Partial<Omit<InsertTransaction, "userId">>;
+
 export function useTransactions(filters?: TransactionFilters) {
   return useQuery({
     queryKey: [api.transactions.list.path, filters],
@@ -32,7 +35,7 @@ export function useCreateTransaction() {
   const { toast } = useToast();
 
   return useMutation({
-    mutationFn: async (data: InsertTransaction) => {
+    mutationFn: async (data: ClientInsertTransaction) => {
       const formattedData = {
         ...data,
         amount: String(data.amount),
@@ -65,7 +68,7 @@ export function useUpdateTransaction() {
   const { toast } = useToast();
 
   return useMutation({
-    mutationFn: async ({ id, payload }: { id: number; payload: Partial<InsertTransaction> }) => {
+    mutationFn: async ({ id, payload }: { id: number; payload: ClientUpdateTransaction }) => {
       const formattedData = {
         ...payload,
         amount: payload.amount !== undefined ? String(payload.amount) : undefined,

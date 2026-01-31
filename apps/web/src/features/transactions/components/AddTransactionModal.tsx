@@ -18,7 +18,7 @@ const formSchema = insertTransactionSchema.extend({
   accountId: z.coerce.number(),
   categoryId: z.coerce.number().optional(),
   date: z.coerce.date(),
-});
+}).omit({ userId: true });
 
 type FormValues = z.infer<typeof formSchema>;
 
@@ -92,7 +92,7 @@ export function AddTransactionModal() {
 
           <div className="space-y-2">
               <Label>Data</Label>
-            <Input type="date" {...register("date")} />
+            <Input type="date" {...register("date", { valueAsDate: true })} />
           </div>
 
           <div className="space-y-2">

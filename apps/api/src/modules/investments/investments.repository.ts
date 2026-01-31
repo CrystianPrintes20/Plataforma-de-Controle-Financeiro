@@ -11,6 +11,11 @@ export class InvestmentsRepository {
     return db.select().from(investments).where(eq(investments.userId, userId));
   }
 
+  async getById(id: number): Promise<Investment | undefined> {
+    const [row] = await db.select().from(investments).where(eq(investments.id, id));
+    return row;
+  }
+
   async create(data: InsertInvestment): Promise<Investment> {
     const [investment] = await db.insert(investments).values(data).returning();
     return investment;

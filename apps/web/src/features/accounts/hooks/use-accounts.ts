@@ -19,7 +19,6 @@ export function useCreateAccount() {
   
   return useMutation({
     mutationFn: async (data: InsertAccount) => {
-      // Coerce numerics as the form might return strings/numbers mixed
       const formattedData = {
         ...data,
         balance: String(data.balance),
@@ -36,6 +35,31 @@ export function useCreateAccount() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [api.accounts.list.path] });
       toast({ title: "Conta criada", description: "Conta adicionada com sucesso." });
+    },
+    onError: (err) => {
+      toast({ title: "Erro", description: err.message, variant: "destructive" });
+    },
+  });
+}
+
+export function useUpdateAccount() {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: async ({ id, payload }: { id: number; payload: Partial<InsertAccount> }) => {
+      const formattedData = {
+        ...payload,
+        balance: payload.balance !== undefined ? String(payload.balance) : undefined,
+        limit: payload.limit ? String(payload.limit) : undefined,
+      };
+
+      const url = buildUrl(api.accounts.update.path, { id });
+      return apiSend(url, "PUT", api.accounts.update.responses[200], formattedData);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [api.accounts.list.path] });
+      toast({ title: "Conta atualizada", description: "Alterações salvas." });
     },
     onError: (err) => {
       toast({ title: "Erro", description: err.message, variant: "destructive" });

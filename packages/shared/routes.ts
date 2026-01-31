@@ -151,7 +151,9 @@ export const api = {
     create: {
       method: 'POST' as const,
       path: '/api/transactions',
-      input: insertTransactionSchema,
+      input: insertTransactionSchema.extend({
+        date: z.coerce.date(),
+      }),
       responses: {
         201: z.custom<typeof transactions.$inferSelect>(),
         400: errorSchemas.validation,
@@ -170,7 +172,11 @@ export const api = {
     update: {
       method: 'PUT' as const,
       path: '/api/transactions/:id',
-      input: insertTransactionSchema.partial(),
+      input: insertTransactionSchema
+        .extend({
+          date: z.coerce.date().optional(),
+        })
+        .partial(),
       responses: {
         200: z.custom<typeof transactions.$inferSelect>(),
         404: errorSchemas.notFound,
@@ -238,6 +244,23 @@ export const api = {
         200: z.custom<typeof investments.$inferSelect>(),
         404: errorSchemas.notFound,
         400: errorSchemas.validation,
+        401: errorSchemas.unauthorized,
+      },
+    },
+    apply: {
+      method: 'POST' as const,
+      path: '/api/investments/apply',
+      input: z.object({
+        investmentId: z.coerce.number(),
+        accountId: z.coerce.number(),
+        amount: z.coerce.number().positive(),
+        date: z.coerce.date().optional(),
+        description: z.string().optional(),
+      }),
+      responses: {
+        200: z.custom<typeof investments.$inferSelect>(),
+        400: errorSchemas.validation,
+        404: errorSchemas.notFound,
         401: errorSchemas.unauthorized,
       },
     },

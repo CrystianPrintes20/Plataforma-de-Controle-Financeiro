@@ -80,6 +80,39 @@ export function useUpdateInvestment() {
   });
 }
 
+type ApplyInvestmentInput = {
+  investmentId: number;
+  accountId: number;
+  amount: number;
+  date: Date;
+  description?: string;
+};
+
+export function useApplyInvestment() {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: async (payload: ApplyInvestmentInput) => {
+      return apiSend(
+        api.investments.apply.path,
+        "POST",
+        api.investments.apply.responses[200],
+        payload
+      );
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [api.investments.list.path] });
+      queryClient.invalidateQueries({ queryKey: [api.accounts.list.path] });
+      queryClient.invalidateQueries({ queryKey: [api.dashboard.get.path] });
+      toast({ title: "Aplicado", description: "Investimento aplicado com sucesso." });
+    },
+    onError: (err) => {
+      toast({ title: "Erro", description: err.message, variant: "destructive" });
+    },
+  });
+}
+
 export function useDeleteInvestment() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
