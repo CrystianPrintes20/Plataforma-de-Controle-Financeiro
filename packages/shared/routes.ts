@@ -5,7 +5,8 @@ import {
   insertTransactionSchema, transactions,
   insertDebtSchema, debts,
   insertInvestmentSchema, investments,
-  insertGoalSchema, goals
+  insertGoalSchema, goals,
+  insertFixedIncomeSchema, fixedIncomes
 } from './schema';
 
 // Shared Error Schemas
@@ -166,6 +167,17 @@ export const api = {
         401: errorSchemas.unauthorized,
       },
     },
+    update: {
+      method: 'PUT' as const,
+      path: '/api/transactions/:id',
+      input: insertTransactionSchema.partial(),
+      responses: {
+        200: z.custom<typeof transactions.$inferSelect>(),
+        404: errorSchemas.notFound,
+        400: errorSchemas.validation,
+        401: errorSchemas.unauthorized,
+      },
+    },
   },
   // --- Debts ---
   debts: {
@@ -218,6 +230,26 @@ export const api = {
         401: errorSchemas.unauthorized,
       },
     },
+    update: {
+      method: 'PUT' as const,
+      path: '/api/investments/:id',
+      input: insertInvestmentSchema.partial(),
+      responses: {
+        200: z.custom<typeof investments.$inferSelect>(),
+        404: errorSchemas.notFound,
+        400: errorSchemas.validation,
+        401: errorSchemas.unauthorized,
+      },
+    },
+    delete: {
+      method: 'DELETE' as const,
+      path: '/api/investments/:id',
+      responses: {
+        204: z.void(),
+        404: errorSchemas.notFound,
+        401: errorSchemas.unauthorized,
+      },
+    },
   },
   // --- Goals ---
   goals: {
@@ -247,6 +279,69 @@ export const api = {
         200: z.custom<typeof goals.$inferSelect>(),
         404: errorSchemas.notFound,
         401: errorSchemas.unauthorized,
+      },
+    },
+  },
+  income: {
+    fixed: {
+      list: {
+        method: 'GET' as const,
+        path: '/api/income/fixed',
+        responses: {
+          200: z.array(z.custom<typeof fixedIncomes.$inferSelect>()),
+          401: errorSchemas.unauthorized,
+        },
+      },
+      create: {
+        method: 'POST' as const,
+        path: '/api/income/fixed',
+        input: insertFixedIncomeSchema,
+        responses: {
+          201: z.custom<typeof fixedIncomes.$inferSelect>(),
+          400: errorSchemas.validation,
+          401: errorSchemas.unauthorized,
+        },
+      },
+      update: {
+        method: 'PUT' as const,
+        path: '/api/income/fixed/:id',
+        input: insertFixedIncomeSchema.partial(),
+        responses: {
+          200: z.custom<typeof fixedIncomes.$inferSelect>(),
+          404: errorSchemas.notFound,
+          400: errorSchemas.validation,
+          401: errorSchemas.unauthorized,
+        },
+      },
+      delete: {
+        method: 'DELETE' as const,
+        path: '/api/income/fixed/:id',
+        responses: {
+          204: z.void(),
+          404: errorSchemas.notFound,
+          401: errorSchemas.unauthorized,
+        },
+      },
+    },
+    annual: {
+      get: {
+        method: 'GET' as const,
+        path: '/api/income/annual',
+        input: z.object({
+          year: z.coerce.number(),
+        }).optional(),
+        responses: {
+          200: z.object({
+            year: z.number(),
+            months: z.array(z.object({
+              month: z.number(),
+              fixedTotal: z.number(),
+              variableTotal: z.number(),
+              total: z.number(),
+            })),
+          }),
+          401: errorSchemas.unauthorized,
+        },
       },
     },
   },

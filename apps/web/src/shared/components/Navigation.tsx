@@ -10,12 +10,13 @@ export function Navigation() {
 
   const navItems = [
     { href: "/", label: "Dashboard", icon: LayoutDashboard },
-    { href: "/transactions", label: "Transactions", icon: Receipt },
-    { href: "/accounts", label: "Accounts", icon: Wallet },
-    { href: "/investments", label: "Investments", icon: TrendingUp },
-    { href: "/debts", label: "Debts", icon: CreditCard },
-    { href: "/goals", label: "Goals", icon: Target },
-    { href: "/settings", label: "Settings", icon: Settings },
+    { href: "/transactions", label: "Transações", icon: Receipt },
+    { href: "/accounts", label: "Contas", icon: Wallet },
+    { href: "/income", label: "Ganhos", icon: TrendingUp },
+    { href: "/investments", label: "Investimentos", icon: TrendingUp },
+    { href: "/debts", label: "Dívidas", icon: CreditCard },
+    { href: "/goals", label: "Metas", icon: Target },
+    { href: "/settings", label: "Configurações", icon: Settings },
   ];
 
   return (
@@ -76,7 +77,7 @@ export function Navigation() {
           </div>
           <Button variant="ghost" className="w-full justify-start gap-2 text-muted-foreground hover:text-destructive hover:bg-destructive/10" onClick={() => logout()}>
             <LogOut className="h-4 w-4" />
-            Sign Out
+            Sair
           </Button>
         </div>
       </div>

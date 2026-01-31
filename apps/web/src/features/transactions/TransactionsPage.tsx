@@ -21,8 +21,8 @@ export default function Transactions() {
     <AppShell>
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
           <div>
-            <h1 className="text-3xl font-display font-bold text-foreground">Transactions</h1>
-            <p className="text-muted-foreground">Manage your income and expenses.</p>
+            <h1 className="text-3xl font-display font-bold text-foreground">Transações</h1>
+            <p className="text-muted-foreground">Gerencie receitas e despesas.</p>
           </div>
           <AddTransactionModal />
         </div>
@@ -30,17 +30,17 @@ export default function Transactions() {
         <Card className="border-border/50 shadow-sm">
           <CardHeader>
             <div className="flex items-center justify-between">
-              <CardTitle>History</CardTitle>
+              <CardTitle>Histórico</CardTitle>
               <div className="flex gap-2">
                 <Select onValueChange={(v) => setFilterType(v === "all" ? undefined : v as any)}>
                   <SelectTrigger className="w-[180px]">
-                    <SelectValue placeholder="Filter by type" />
+                    <SelectValue placeholder="Filtrar por tipo" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">All Types</SelectItem>
-                    <SelectItem value="income">Income</SelectItem>
-                    <SelectItem value="expense">Expense</SelectItem>
-                    <SelectItem value="transfer">Transfer</SelectItem>
+                    <SelectItem value="all">Todos</SelectItem>
+                    <SelectItem value="income">Receita</SelectItem>
+                    <SelectItem value="expense">Despesa</SelectItem>
+                    <SelectItem value="transfer">Transferência</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -48,7 +48,7 @@ export default function Transactions() {
           </CardHeader>
           <CardContent>
             {isLoading ? (
-              <div className="py-10 text-center">Loading transactions...</div>
+              <div className="py-10 text-center">Carregando transações...</div>
             ) : (
               <Table>
                 <TableHeader>
@@ -85,7 +85,7 @@ export default function Transactions() {
                   {transactions?.length === 0 && (
                     <TableRow>
                       <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
-                        No transactions found.
+                        Nenhuma transação encontrada.
                       </TableCell>
                     </TableRow>
                   )}

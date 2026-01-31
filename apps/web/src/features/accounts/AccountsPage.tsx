@@ -46,14 +46,14 @@ export default function Accounts() {
     <AppShell>
         <div className="flex justify-between items-center mb-8">
           <div>
-            <h1 className="text-3xl font-display font-bold text-foreground">Accounts</h1>
-            <p className="text-muted-foreground">Track balances across all your accounts.</p>
+            <h1 className="text-3xl font-display font-bold text-foreground">Contas</h1>
+            <p className="text-muted-foreground">Acompanhe os saldos das suas contas.</p>
           </div>
           <AddAccountModal />
         </div>
 
         {isLoading ? (
-          <div>Loading accounts...</div>
+          <div>Carregando contas...</div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {accounts?.map((account) => (
@@ -70,13 +70,13 @@ export default function Accounts() {
                     {formatter.format(Number(account.balance))}
                   </div>
                   <p className="text-xs text-muted-foreground capitalize mt-1">
-                    {account.type} Account
+                    {account.type} Conta
                   </p>
                 </CardContent>
                 <CardFooter className="flex justify-end pt-0">
                   <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => deleteAccount(account.id)}>
                     <Trash2 className="h-4 w-4 mr-2" />
-                    Remove
+                    Remover
                   </Button>
                 </CardFooter>
               </Card>
@@ -87,7 +87,7 @@ export default function Accounts() {
                 <div className="h-12 w-12 rounded-full bg-muted flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-colors">
                   <Plus className="h-6 w-6" />
                 </div>
-                <p className="font-medium text-muted-foreground group-hover:text-primary">Add New Account</p>
+                <p className="font-medium text-muted-foreground group-hover:text-primary">Adicionar nova conta</p>
               </button>
             }/>
           </div>
@@ -125,39 +125,39 @@ function AddAccountModal({ trigger }: { trigger?: React.ReactNode }) {
       <DialogTrigger asChild>
         {trigger || (
           <Button className="gap-2 shadow-lg shadow-primary/20">
-            <Plus className="h-4 w-4" /> Add Account
+            <Plus className="h-4 w-4" /> Adicionar conta
           </Button>
         )}
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Add Account</DialogTitle>
+          <DialogTitle>Adicionar conta</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 pt-4">
           <div className="space-y-2">
-            <Label>Account Name</Label>
-            <Input placeholder="e.g. Chase Checking" {...register("name")} />
+            <Label>Nome da conta</Label>
+            <Input placeholder="Ex: Conta salário" {...register("name")} />
             {errors.name && <p className="text-xs text-destructive">{errors.name.message}</p>}
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label>Type</Label>
+              <Label>Tipo</Label>
               <Select onValueChange={(val) => setValue("type", val as any)} defaultValue="checking">
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="checking">Checking</SelectItem>
-                  <SelectItem value="savings">Savings</SelectItem>
-                  <SelectItem value="credit">Credit Card</SelectItem>
-                  <SelectItem value="cash">Cash</SelectItem>
-                  <SelectItem value="investment">Investment</SelectItem>
+                  <SelectItem value="checking">Corrente</SelectItem>
+                  <SelectItem value="savings">Poupança</SelectItem>
+                  <SelectItem value="credit">Cartão de crédito</SelectItem>
+                  <SelectItem value="cash">Dinheiro</SelectItem>
+                  <SelectItem value="investment">Investimento</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-2">
-              <Label>Initial Balance</Label>
+              <Label>Saldo inicial</Label>
               <div className="relative">
                 <span className="absolute left-3 top-2.5 text-muted-foreground">$</span>
                 <Input type="number" step="0.01" className="pl-7" {...register("balance")} />
@@ -166,7 +166,7 @@ function AddAccountModal({ trigger }: { trigger?: React.ReactNode }) {
           </div>
 
           <Button type="submit" className="w-full" disabled={isPending}>
-            {isPending ? "Creating..." : "Create Account"}
+            {isPending ? "Criando..." : "Salvar"}
           </Button>
         </form>
       </DialogContent>

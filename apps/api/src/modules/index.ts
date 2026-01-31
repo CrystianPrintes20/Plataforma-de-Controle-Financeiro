@@ -6,3 +6,4 @@ export { registerInvestmentRoutes } from "./investments/investments.controller";
 export { registerGoalRoutes } from "./goals/goals.controller";
 export { registerDashboardRoutes } from "./dashboard/dashboard.controller";
 export { registerSettingsRoutes } from "./settings/settings.controller";
+export { registerIncomeRoutes } from "./income/income.controller";

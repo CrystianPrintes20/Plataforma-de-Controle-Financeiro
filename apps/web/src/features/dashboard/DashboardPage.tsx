@@ -27,7 +27,7 @@ export default function Dashboard() {
         <header className="flex justify-between items-center mb-8">
           <div>
             <h1 className="text-3xl font-display font-bold text-foreground">Dashboard</h1>
-            <p className="text-muted-foreground">Welcome back, here's your financial overview.</p>
+            <p className="text-muted-foreground">Visão geral das suas finanças.</p>
           </div>
           <AddTransactionModal />
         </header>
@@ -35,19 +35,19 @@ export default function Dashboard() {
         {/* KPIs */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <KPICard 
-            title="Total Balance" 
+            title="Saldo total" 
             value={formatter.format(Number(data?.totalBalance || 0))} 
             icon={Wallet} 
             color="primary"
           />
           <KPICard 
-            title="Net Worth" 
+            title="Patrimônio líquido" 
             value={formatter.format(Number(data?.netWorth || 0))} 
             icon={PiggyBank} 
             color="secondary"
           />
           <KPICard 
-            title="Monthly Income" 
+            title="Receitas do mês" 
             value={formatter.format(Number(data?.monthlyIncome || 0))} 
             icon={TrendingUp} 
             color="accent"
@@ -55,7 +55,7 @@ export default function Dashboard() {
             trendUp={true}
           />
           <KPICard 
-            title="Monthly Expenses" 
+            title="Despesas do mês" 
             value={formatter.format(Number(data?.monthlyExpenses || 0))} 
             icon={TrendingDown} 
             color="destructive"
@@ -68,7 +68,7 @@ export default function Dashboard() {
           {/* Main Chart */}
           <Card className="lg:col-span-2 border-border/50 shadow-sm">
             <CardHeader>
-              <CardTitle>Recent Activity</CardTitle>
+          <CardTitle>Movimentações recentes</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="h-[300px]">
@@ -96,7 +96,7 @@ export default function Dashboard() {
           {/* Recent Transactions List */}
           <Card className="border-border/50 shadow-sm">
             <CardHeader>
-              <CardTitle>Transactions</CardTitle>
+              <CardTitle>Transações</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-6">
@@ -123,7 +123,7 @@ export default function Dashboard() {
                   </div>
                 ))}
                 {(!data?.recentTransactions || data.recentTransactions.length === 0) && (
-                  <p className="text-muted-foreground text-center py-8">No recent transactions</p>
+                  <p className="text-muted-foreground text-center py-8">Sem transações recentes</p>
                 )}
               </div>
             </CardContent>

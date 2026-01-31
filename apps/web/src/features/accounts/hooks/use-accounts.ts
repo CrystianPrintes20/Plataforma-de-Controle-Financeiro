@@ -35,10 +35,10 @@ export function useCreateAccount() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [api.accounts.list.path] });
-      toast({ title: "Account Created", description: "Your account has been successfully added." });
+      toast({ title: "Conta criada", description: "Conta adicionada com sucesso." });
     },
     onError: (err) => {
-      toast({ title: "Error", description: err.message, variant: "destructive" });
+      toast({ title: "Erro", description: err.message, variant: "destructive" });
     },
   });
 }
@@ -54,7 +54,7 @@ export function useDeleteAccount() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [api.accounts.list.path] });
-      toast({ title: "Account Deleted", description: "The account has been removed." });
+      toast({ title: "Conta removida", description: "A conta foi removida." });
     },
   });
 }

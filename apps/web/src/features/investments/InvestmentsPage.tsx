@@ -3,13 +3,19 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/card";
 import { Skeleton } from "@/shared/ui/skeleton";
 import { KPICard } from "@/shared/components/KPICard";
 import { AddInvestmentModal } from "./components/AddInvestmentModal";
-import { useInvestments } from "./hooks/use-investments";
+import { EditInvestmentModal } from "./components/EditInvestmentModal";
+import { useInvestments, useDeleteInvestment } from "./hooks/use-investments";
 import { useMoneyFormatter } from "@/shared";
-import { Building2, Wallet } from "lucide-react";
+import { Building2, Wallet, Pencil, Trash2 } from "lucide-react";
+import { Button } from "@/shared/ui/button";
+import { useState } from "react";
+import type { Investment } from "@shared/schema";
 
 export default function InvestmentsPage() {
   const { data: investments, isLoading } = useInvestments();
+  const { mutate: deleteInvestment } = useDeleteInvestment();
   const { formatter } = useMoneyFormatter();
+  const [editing, setEditing] = useState<Investment | null>(null);
 
   const total = investments?.reduce(
     (sum, inv) => sum + Number(inv.currentValue),
@@ -67,11 +73,29 @@ export default function InvestmentsPage() {
                     <p className="font-medium text-foreground">{inv.name}</p>
                     <p className="text-xs text-muted-foreground">{inv.type}</p>
                   </div>
-                  <div className="text-right">
-                    <p className="font-semibold text-foreground">
-                      {formatter.format(Number(inv.currentValue))}
-                    </p>
-                    <p className="text-xs text-muted-foreground">Saldo atual</p>
+                  <div className="flex items-center gap-3">
+                    <div className="text-right">
+                      <p className="font-semibold text-foreground">
+                        {formatter.format(Number(inv.currentValue))}
+                      </p>
+                      <p className="text-xs text-muted-foreground">Saldo atual</p>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8"
+                      onClick={() => setEditing(inv as Investment)}
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 text-destructive"
+                      onClick={() => deleteInvestment(inv.id)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
                   </div>
                 </div>
               ))}
@@ -79,6 +103,14 @@ export default function InvestmentsPage() {
           )}
         </CardContent>
       </Card>
+
+      {editing && (
+        <EditInvestmentModal
+          investment={editing}
+          open={!!editing}
+          onOpenChange={(open) => !open && setEditing(null)}
+        />
+      )}
     </AppShell>
   );
 }

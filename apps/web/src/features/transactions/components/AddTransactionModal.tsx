@@ -58,30 +58,30 @@ export function AddTransactionModal() {
       <DialogTrigger asChild>
         <Button className="gap-2 shadow-lg shadow-primary/20 hover:shadow-primary/30 transition-all">
           <Plus className="h-4 w-4" />
-          Add Transaction
+          Adicionar transação
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>New Transaction</DialogTitle>
+          <DialogTitle>Nova transação</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 pt-4">
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label>Type</Label>
+              <Label>Tipo</Label>
               <Select onValueChange={(val) => setValue("type", val as any)} defaultValue="expense">
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="income">Income</SelectItem>
-                  <SelectItem value="expense">Expense</SelectItem>
-                  <SelectItem value="transfer">Transfer</SelectItem>
+                  <SelectItem value="income">Receita</SelectItem>
+                  <SelectItem value="expense">Despesa</SelectItem>
+                  <SelectItem value="transfer">Transferência</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-2">
-              <Label>Amount</Label>
+              <Label>Valor</Label>
               <div className="relative">
                 <span className="absolute left-3 top-2.5 text-muted-foreground">$</span>
                 <Input type="number" step="0.01" className="pl-7" {...register("amount")} />
@@ -91,21 +91,21 @@ export function AddTransactionModal() {
           </div>
 
           <div className="space-y-2">
-            <Label>Date</Label>
+              <Label>Data</Label>
             <Input type="date" {...register("date")} />
           </div>
 
           <div className="space-y-2">
-            <Label>Description</Label>
-            <Input placeholder="e.g. Grocery Shopping" {...register("description")} />
+              <Label>Descrição</Label>
+              <Input placeholder="Ex: Supermercado" {...register("description")} />
             {errors.description && <p className="text-xs text-destructive">{errors.description.message}</p>}
           </div>
 
           <div className="space-y-2">
-            <Label>Account</Label>
+              <Label>Conta</Label>
             <Select onValueChange={(val) => setValue("accountId", Number(val))}>
               <SelectTrigger>
-                <SelectValue placeholder="Select account" />
+                  <SelectValue placeholder="Selecione a conta" />
               </SelectTrigger>
               <SelectContent>
                 {accounts?.map((account) => (
@@ -115,15 +115,15 @@ export function AddTransactionModal() {
                 ))}
               </SelectContent>
             </Select>
-            {errors.accountId && <p className="text-xs text-destructive">Account is required</p>}
+              {errors.accountId && <p className="text-xs text-destructive">Conta obrigatória</p>}
           </div>
 
           {type !== "transfer" && (
             <div className="space-y-2">
-              <Label>Category</Label>
+              <Label>Categoria</Label>
               <Select onValueChange={(val) => setValue("categoryId", Number(val))}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select category" />
+                  <SelectValue placeholder="Selecione a categoria" />
                 </SelectTrigger>
                 <SelectContent>
                   {categories?.filter(c => c.type === type).map((category) => (
@@ -138,7 +138,7 @@ export function AddTransactionModal() {
 
           <div className="flex justify-end pt-4">
             <Button type="submit" disabled={isPending} className="w-full">
-              {isPending ? "Adding..." : "Add Transaction"}
+              {isPending ? "Salvando..." : "Salvar"}
             </Button>
           </div>
         </form>
