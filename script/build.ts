@@ -47,7 +47,7 @@ async function buildAll() {
   const externals = allDeps.filter((dep) => !allowlist.includes(dep));
 
   await esbuild({
-    entryPoints: ["apps/api/index.ts"],
+    entryPoints: ["apps/api/src/index.ts"],
     platform: "node",
     bundle: true,
     format: "cjs",

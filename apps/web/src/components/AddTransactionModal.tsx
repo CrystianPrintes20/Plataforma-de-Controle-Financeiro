@@ -37,12 +37,18 @@ export function AddTransactionModal() {
   });
 
   const onSubmit = (data: FormValues) => {
-    mutate(data, {
+    mutate(
+      {
+        ...data,
+        amount: data.amount.toString(),
+      },
+      {
       onSuccess: () => {
         setOpen(false);
         reset();
       },
-    });
+    }
+    );
   };
 
   const type = watch("type");

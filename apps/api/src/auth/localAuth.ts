@@ -2,6 +2,9 @@ import type { Express, RequestHandler } from "express";
 import session from "express-session";
 import connectPg from "connect-pg-simple";
 import { authStorage } from "./storage";
+import { env } from "../config/env";
+import { HTTP_STATUS } from "../shared";
+import { ok, fail } from "../shared";
 
 declare module "express-session" {
   interface SessionData {
@@ -22,9 +25,10 @@ function getSessionStore() {
 }
 
 function getSessionSecret() {
-  if (process.env.SESSION_SECRET) return process.env.SESSION_SECRET;
-  console.warn("SESSION_SECRET not set. Using a dev-only secret.");
-  return "dev-session-secret";
+  if (!env.sessionSecret) {
+    console.warn("SESSION_SECRET not set. Using a dev-only secret.");
+  }
+  return env.sessionSecret || "dev-session-secret";
 }
 
 export function setupAuth(app: Express) {
@@ -47,7 +51,7 @@ export function setupAuth(app: Express) {
 
 async function ensureLocalUser() {
   const userId = process.env.DEV_USER_ID ?? "local-dev-user";
-  const email = process.env.AUTH_EMAIL ?? "local@dev";
+  const email = env.authEmail || "local@dev";
 
   return authStorage.upsertUser({
     id: userId,
@@ -61,43 +65,55 @@ export function registerAuthRoutes(app: Express) {
   app.post("/api/auth/login", async (req, res) => {
     const { email, password } = req.body ?? {};
 
-    const expectedEmail = process.env.AUTH_EMAIL ?? "local@dev";
-    const expectedPassword = process.env.AUTH_PASSWORD ?? "dev-password";
+    const expectedEmail = env.authEmail || "local@dev";
+    const expectedPassword = env.authPassword || "dev-password";
 
     if (email !== expectedEmail || password !== expectedPassword) {
-      return res.status(401).json({ message: "Invalid credentials" });
+      return res
+        .status(HTTP_STATUS.UNAUTHORIZED)
+        .json(fail("Invalid credentials"));
     }
 
     const user = await ensureLocalUser();
     req.session.userId = user.id;
-    res.json(user);
+    res.json(ok(user));
   });
 
   app.post("/api/auth/logout", (req, res) => {
     req.session.destroy((err) => {
-      if (err) return res.status(500).json({ message: "Failed to logout" });
+      if (err) {
+        return res
+          .status(HTTP_STATUS.INTERNAL_SERVER_ERROR)
+          .json(fail("Failed to logout"));
+      }
       res.clearCookie("connect.sid");
-      res.status(204).send();
+      res.status(HTTP_STATUS.NO_CONTENT).send();
     });
   });
 
   app.get("/api/auth/user", async (req, res) => {
     if (!req.session.userId) {
-      return res.status(401).json({ message: "Unauthorized" });
+      return res
+        .status(HTTP_STATUS.UNAUTHORIZED)
+        .json(fail("Unauthorized"));
     }
     const user = await authStorage.getUser(req.session.userId);
-    res.json(user);
+    res.json(ok(user));
   });
 }
 
 export const isAuthenticated: RequestHandler = async (req, res, next) => {
   if (!req.session.userId) {
-    return res.status(401).json({ message: "Unauthorized" });
+    return res
+      .status(HTTP_STATUS.UNAUTHORIZED)
+      .json(fail("Unauthorized"));
   }
 
   const user = await authStorage.getUser(req.session.userId);
   if (!user) {
-    return res.status(401).json({ message: "Unauthorized" });
+    return res
+      .status(HTTP_STATUS.UNAUTHORIZED)
+      .json(fail("Unauthorized"));
   }
 
   (req as any).user = { claims: { sub: user.id } };

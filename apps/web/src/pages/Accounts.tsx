@@ -106,12 +106,19 @@ function AddAccountModal({ trigger }: { trigger?: React.ReactNode }) {
   });
 
   const onSubmit = (data: FormValues) => {
-    mutate(data, {
+    mutate(
+      {
+        ...data,
+        balance: data.balance?.toString(),
+        limit: data.limit !== undefined ? data.limit.toString() : undefined,
+      },
+      {
       onSuccess: () => {
         setOpen(false);
         reset();
       }
-    });
+    }
+    );
   };
 
   return (
