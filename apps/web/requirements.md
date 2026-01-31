@@ -11,5 +11,5 @@ fontFamily: {
   display: ["var(--font-display)"],
   body: ["var(--font-body)"],
 }
-Authentication is handled via Replit Auth (useAuth hook).
+Authentication is handled via the local auth flow (useAuth hook).
 API hooks should use @shared/routes for type safety.
