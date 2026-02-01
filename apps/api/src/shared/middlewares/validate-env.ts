@@ -32,6 +32,14 @@ const envSchema = z.object({
     emptyToUndefined,
     z.enum(["BRL", "USD"]).default("BRL")
   ),
+  INCOME_BALANCE_FROM_YEAR: z.preprocess(
+    emptyToUndefined,
+    z.coerce.number().int().positive().default(2026)
+  ),
+  INCOME_BALANCE_FROM_MONTH: z.preprocess(
+    emptyToUndefined,
+    z.coerce.number().int().min(1).max(12).default(2)
+  ),
 });
 
 export type Env = z.infer<typeof envSchema>;
