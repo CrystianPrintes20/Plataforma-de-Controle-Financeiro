@@ -9,7 +9,7 @@ import { Label } from "@/shared/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/ui/select";
 import { useAccounts } from "@/features/accounts";
 import { useCategories } from "@/features/categories";
-import { useCreateFixedIncome } from "../hooks/use-income";
+import { useCreateIncomeEntry } from "../hooks/use-income";
 import { Plus } from "lucide-react";
 
 const formSchema = z.object({
@@ -18,13 +18,15 @@ const formSchema = z.object({
   dayOfMonth: z.coerce.number().min(1).max(28),
   accountId: z.coerce.number(),
   categoryId: z.coerce.number().optional(),
+  month: z.coerce.number().min(1).max(12),
+  year: z.coerce.number().min(2000),
 });
 
 type FormValues = z.infer<typeof formSchema>;
 
-export function AddFixedIncomeModal() {
+export function AddMonthlyEntryModal({ defaultYear }: { defaultYear: number }) {
   const [open, setOpen] = useState(false);
-  const { mutate, isPending } = useCreateFixedIncome();
+  const { mutate, isPending } = useCreateIncomeEntry();
   const { data: accounts } = useAccounts();
   const { data: categories } = useCategories();
 
@@ -32,6 +34,8 @@ export function AddFixedIncomeModal() {
     resolver: zodResolver(formSchema),
     defaultValues: {
       dayOfMonth: 10,
+      month: new Date().getMonth() + 1,
+      year: defaultYear,
     },
   });
 
@@ -40,15 +44,22 @@ export function AddFixedIncomeModal() {
   const onSubmit = (data: FormValues) => {
     mutate(
       {
-        ...data,
+        name: data.name,
         amount: data.amount.toString(),
+        dayOfMonth: data.dayOfMonth,
         accountId: Number(data.accountId),
         categoryId: data.categoryId ? Number(data.categoryId) : undefined,
+        month: data.month,
+        year: data.year,
       },
       {
         onSuccess: () => {
           setOpen(false);
-          reset();
+          reset({
+            dayOfMonth: 10,
+            month: new Date().getMonth() + 1,
+            year: data.year,
+          });
         },
       }
     );
@@ -59,12 +70,12 @@ export function AddFixedIncomeModal() {
       <DialogTrigger asChild>
         <Button className="gap-2">
           <Plus className="h-4 w-4" />
-          Ganho fixo
+          Nova entrada
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[440px]">
         <DialogHeader>
-          <DialogTitle>Novo ganho fixo</DialogTitle>
+          <DialogTitle>Nova entrada mensal</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 pt-2">
           <div className="space-y-2">
@@ -82,6 +93,31 @@ export function AddFixedIncomeModal() {
             <div className="space-y-2">
               <Label>Dia do mês</Label>
               <Input type="number" min={1} max={28} {...register("dayOfMonth")} />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>Mês</Label>
+              <Select
+                defaultValue={String(new Date().getMonth() + 1)}
+                onValueChange={(val) => setValue("month", Number(val))}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {Array.from({ length: 12 }, (_, i) => i + 1).map((month) => (
+                    <SelectItem key={month} value={String(month)}>
+                      {new Date(2023, month - 1, 1).toLocaleString("pt-BR", { month: "short" })}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Ano</Label>
+              <Input type="number" {...register("year")} />
             </div>
           </div>
 

@@ -111,26 +111,25 @@ export type Goal = typeof goals.$inferSelect;
 export type InsertGoal = z.infer<typeof insertGoalSchema>;
 
 // --- Fixed Incomes ---
-export const fixedIncomes = pgTable("fixed_incomes", {
+export const incomeEntries = pgTable("income_entries", {
   id: serial("id").primaryKey(),
   userId: text("user_id").notNull().references(() => users.id),
   name: text("name").notNull(),
   amount: numeric("amount", { precision: 12, scale: 2 }).notNull(),
   dayOfMonth: integer("day_of_month").notNull(),
+  month: integer("month").notNull(),
+  year: integer("year").notNull(),
   accountId: integer("account_id").notNull().references(() => accounts.id),
   categoryId: integer("category_id").references(() => categories.id),
-  startsAt: timestamp("starts_at").notNull().defaultNow(),
-  endsAt: timestamp("ends_at"),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
-export const insertFixedIncomeSchema = createInsertSchema(fixedIncomes).omit({
+export const insertIncomeEntrySchema = createInsertSchema(incomeEntries).omit({
   id: true,
   createdAt: true,
-  endsAt: true,
 });
-export type FixedIncome = typeof fixedIncomes.$inferSelect;
-export type InsertFixedIncome = z.infer<typeof insertFixedIncomeSchema>;
+export type IncomeEntry = typeof incomeEntries.$inferSelect;
+export type InsertIncomeEntry = z.infer<typeof insertIncomeEntrySchema>;
 
 // --- App Settings ---
 export const appSettings = pgTable("app_settings", {

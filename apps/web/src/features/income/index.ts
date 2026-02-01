@@ -1,16 +1,11 @@
 export { default as IncomePage } from "./IncomePage";
-export { AddIncomeModal } from "./components/AddIncomeModal";
-export { AddFixedIncomeModal } from "./components/AddFixedIncomeModal";
-export { EditIncomeModal } from "./components/EditIncomeModal";
-export { EditFixedIncomeModal } from "./components/EditFixedIncomeModal";
+export { AddMonthlyEntryModal } from "./components/AddMonthlyEntryModal";
+export { EditMonthlyEntryModal } from "./components/EditMonthlyEntryModal";
+export { ImportIncomeModal } from "./components/ImportIncomeModal";
 export {
-  useIncomeTransactions,
-  useCreateIncome,
-  useUpdateIncome,
-  useDeleteIncome,
-  useFixedIncomes,
-  useCreateFixedIncome,
-  useUpdateFixedIncome,
-  useDeleteFixedIncome,
+  useIncomeEntries,
+  useCreateIncomeEntry,
+  useUpdateIncomeEntry,
+  useDeleteIncomeEntry,
   useAnnualIncome,
 } from "./hooks/use-income";

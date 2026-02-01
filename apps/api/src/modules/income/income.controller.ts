@@ -6,17 +6,17 @@ import { IncomeService } from "./income.service";
 import { z } from "zod";
 
 export function registerIncomeRoutes(app: Express, service = new IncomeService()) {
-  app.get(api.income.fixed.list.path, isAuthenticated, async (req: any, res) => {
+  app.get(api.income.entries.list.path, isAuthenticated, async (req: any, res) => {
     const userId = req.user!.claims.sub;
-    const rows = await service.listFixed(userId);
+    const rows = await service.listEntries(userId);
     res.json(ok(rows));
   });
 
-  app.post(api.income.fixed.create.path, isAuthenticated, async (req: any, res) => {
+  app.post(api.income.entries.create.path, isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user!.claims.sub;
-      const input = api.income.fixed.create.input.parse({ ...req.body, userId });
-      const created = await service.createFixed(userId, input);
+      const input = api.income.entries.create.input.parse({ ...req.body, userId });
+      const created = await service.createEntry(userId, input);
       res.status(HTTP_STATUS.CREATED).json(ok(created));
     } catch (err) {
       if (err instanceof z.ZodError) {
@@ -28,19 +28,15 @@ export function registerIncomeRoutes(app: Express, service = new IncomeService()
     }
   });
 
-  app.put(api.income.fixed.update.path, isAuthenticated, async (req: any, res) => {
+  app.put(api.income.entries.update.path, isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user!.claims.sub;
-      const input = api.income.fixed.update.input.parse(req.body);
-      const updated = await service.updateFixedFutureOnly(
-        userId,
-        Number(req.params.id),
-        input
-      );
+      const input = api.income.entries.update.input.parse(req.body);
+      const updated = await service.updateEntry(userId, Number(req.params.id), input);
       if (!updated) {
         return res
           .status(HTTP_STATUS.NOT_FOUND)
-          .json(fail("Fixed income not found"));
+          .json(fail("Entry not found"));
       }
       res.json(ok(updated));
     } catch (err) {
@@ -53,11 +49,11 @@ export function registerIncomeRoutes(app: Express, service = new IncomeService()
     }
   });
 
-  app.delete(api.income.fixed.delete.path, isAuthenticated, async (req: any, res) => {
+  app.delete(api.income.entries.delete.path, isAuthenticated, async (req: any, res) => {
     const userId = req.user!.claims.sub;
-    const okDelete = await service.deleteFixedFutureOnly(userId, Number(req.params.id));
+    const okDelete = await service.deleteEntry(userId, Number(req.params.id));
     if (!okDelete) {
-      return res.status(HTTP_STATUS.NOT_FOUND).json(fail("Fixed income not found"));
+      return res.status(HTTP_STATUS.NOT_FOUND).json(fail("Entry not found"));
     }
     res.status(HTTP_STATUS.NO_CONTENT).send();
   });
