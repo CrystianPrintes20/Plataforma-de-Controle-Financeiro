@@ -13,7 +13,7 @@ import { AddMonthlyEntryModal } from "./components/AddMonthlyEntryModal";
 import { EditMonthlyEntryModal } from "./components/EditMonthlyEntryModal";
 import { useIncomeEntries, useDeleteIncomeEntry, useAnnualIncome } from "./hooks/use-income";
 import type { IncomeEntry } from "@shared/schema";
-import { ResponsiveContainer, BarChart, Bar, XAxis, Tooltip, CartesianGrid, Line, ComposedChart } from "recharts";
+import { ResponsiveContainer, Bar, XAxis, Tooltip, CartesianGrid, Line, ComposedChart } from "recharts";
 import { Pencil, Trash2 } from "lucide-react";
 
 export default function IncomePage() {
@@ -39,8 +39,9 @@ export default function IncomePage() {
   }, [entries, yearTouched]);
 
   const chartData = useMemo(() => {
-    return (annual?.months ?? []).map((m) => ({
-      name: format(new Date(annual!.year, m.month - 1, 1), "MMM"),
+    if (!annual) return [];
+    return annual.months.map((m) => ({
+      name: format(new Date(annual.year, m.month - 1, 1), "MMM"),
       total: m.total,
     }));
   }, [annual]);
@@ -99,7 +100,7 @@ export default function IncomePage() {
           <h1 className="text-3xl font-display font-bold text-foreground">Entradas</h1>
           <p className="text-muted-foreground">Entradas mensais com histórico anual.</p>
         </div>
-        <div className="flex flex-wrap gap-2">
+        <div className="flex w-full flex-col gap-2 sm:flex-row sm:items-center md:w-auto">
           <Select
             value={selectedYear}
             onValueChange={(value) => {
@@ -107,7 +108,7 @@ export default function IncomePage() {
               setYearTouched(true);
             }}
           >
-            <SelectTrigger className="w-[140px]">
+            <SelectTrigger className="w-full sm:w-[160px]">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -118,15 +119,19 @@ export default function IncomePage() {
               ))}
             </SelectContent>
           </Select>
-          <ImportIncomeModal />
-          <AddMonthlyEntryModal defaultYear={Number(selectedYear)} />
+          <ImportIncomeModal triggerClassName="w-full sm:w-auto" />
+          <AddMonthlyEntryModal
+            defaultYear={Number(selectedYear)}
+            triggerClassName="w-full sm:w-auto"
+          />
         </div>
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 mb-8">
         <Card className="border-border/50 shadow-sm xl:col-span-2">
-          <CardHeader>
+          <CardHeader className="space-y-1">
             <CardTitle>Histórico anual</CardTitle>
+            <p className="text-sm text-muted-foreground">Comparativo mensal do ano selecionado.</p>
           </CardHeader>
           <CardContent>
             {loadingAnnual ? (
@@ -138,7 +143,7 @@ export default function IncomePage() {
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
                     <XAxis dataKey="name" axisLine={false} tickLine={false} />
                     <Tooltip
-                      formatter={(value: number) => formatter.format(Number(value))}
+                      formatter={(value: number | string) => formatter.format(Number(value))}
                       contentStyle={{ backgroundColor: "hsl(var(--card))", borderColor: "hsl(var(--border))" }}
                     />
                     <Bar dataKey="total" fill="hsl(var(--primary))" />
@@ -151,8 +156,9 @@ export default function IncomePage() {
         </Card>
 
         <Card className="border-border/50 shadow-sm">
-          <CardHeader>
+          <CardHeader className="space-y-1">
             <CardTitle>Resumo mensal</CardTitle>
+            <p className="text-sm text-muted-foreground">Totais por mês no ano atual.</p>
           </CardHeader>
           <CardContent>
             {loadingAnnual ? (
@@ -166,7 +172,7 @@ export default function IncomePage() {
                   >
                     <div className="flex items-center justify-between mb-2">
                       <span className="text-sm font-medium">
-                        {format(new Date(annual!.year, month.month - 1, 1), "MMM")}
+                        {format(new Date(annual?.year ?? Number(selectedYear), month.month - 1, 1), "MMM")}
                       </span>
                       <span className="text-xs text-muted-foreground">Total</span>
                     </div>
@@ -182,51 +188,69 @@ export default function IncomePage() {
       </div>
 
       <Card className="border-border/50 shadow-sm mb-8">
-        <CardHeader>
+        <CardHeader className="space-y-1">
           <CardTitle>Entradas mensais por fonte</CardTitle>
+          <p className="text-sm text-muted-foreground">
+            Visão por fonte com distribuição mensal e total do ano.
+          </p>
         </CardHeader>
         <CardContent>
-          <div className="-mx-4 px-4 overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="min-w-[200px]">Fonte</TableHead>
-                  {Array.from({ length: 12 }, (_, i) => (
-                    <TableHead key={i} className="text-right min-w-[90px]">
-                      {format(new Date(Number(selectedYear), i, 1), "MMM")}
-                    </TableHead>
-                  ))}
-                  <TableHead className="text-right min-w-[110px]">Total</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {entryRows.map((row) => (
-                  <TableRow key={row.name}>
-                    <TableCell className="font-medium">{row.name}</TableCell>
+          {entryRows.length === 0 ? (
+            <p className="text-muted-foreground">Nenhuma entrada cadastrada para este ano.</p>
+          ) : (
+            <div className="space-y-4">
+              {entryRows.map((row) => (
+                <div
+                  key={row.name}
+                  className="rounded-lg border border-border/60 bg-card/60 p-4 shadow-sm"
+                >
+                  <div className="flex items-start justify-between gap-3 mb-4">
+                    <div className="text-base font-semibold">{row.name}</div>
+                    <div className="text-right">
+                      <div className="text-xs text-muted-foreground">Total</div>
+                      <div className="text-base font-semibold">{formatter.format(row.total)}</div>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
                     {row.months.map((value, idx) => (
-                      <TableCell key={`${row.name}-${idx}`} className="text-right">
-                        {formatter.format(value)}
-                      </TableCell>
+                      <div
+                        key={`${row.name}-${idx}`}
+                        className="rounded-md border border-border/50 bg-background/60 p-3"
+                      >
+                        <div className="text-xs text-muted-foreground">
+                          {format(new Date(Number(selectedYear), idx, 1), "MMM")}
+                        </div>
+                        <div className="text-sm font-medium">{formatter.format(value)}</div>
+                      </div>
                     ))}
-                    <TableCell className="text-right font-medium">
-                      {formatter.format(row.total)}
-                    </TableCell>
-                  </TableRow>
-                ))}
-                <TableRow>
-                  <TableCell className="font-semibold">Total</TableCell>
+                  </div>
+                </div>
+              ))}
+
+              <div className="rounded-lg border border-border/60 bg-muted/40 p-4">
+                <div className="flex items-start justify-between gap-3 mb-4">
+                  <div className="text-base font-semibold">Total do ano</div>
+                  <div className="text-right">
+                    <div className="text-xs text-muted-foreground">Total</div>
+                    <div className="text-base font-semibold">{formatter.format(yearTotal)}</div>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
                   {totalsByMonth.map((value, idx) => (
-                    <TableCell key={`total-${idx}`} className="text-right font-semibold">
-                      {formatter.format(value)}
-                    </TableCell>
+                    <div
+                      key={`total-${idx}`}
+                      className="rounded-md border border-border/50 bg-background/60 p-3"
+                    >
+                      <div className="text-xs text-muted-foreground">
+                        {format(new Date(Number(selectedYear), idx, 1), "MMM")}
+                      </div>
+                      <div className="text-sm font-semibold">{formatter.format(value)}</div>
+                    </div>
                   ))}
-                  <TableCell className="text-right font-semibold">
-                    {formatter.format(yearTotal)}
-                  </TableCell>
-                </TableRow>
-              </TableBody>
-            </Table>
-          </div>
+                </div>
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
 
@@ -259,49 +283,97 @@ export default function IncomePage() {
           ) : monthEntries.length === 0 ? (
             <p className="text-muted-foreground">Nenhuma entrada para este mês.</p>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Descrição</TableHead>
-                  <TableHead>Conta</TableHead>
-                  <TableHead>Dia</TableHead>
-                  <TableHead className="text-right">Valor</TableHead>
-                  <TableHead className="w-[80px]"></TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
+            <>
+              <div className="space-y-3 md:hidden">
                 {monthEntries.map((item) => (
-                  <TableRow key={item.id}>
-                    <TableCell className="font-medium">{item.name}</TableCell>
-                    <TableCell>{accounts?.find((acc) => acc.id === item.accountId)?.name || "-"}</TableCell>
-                    <TableCell>Dia {item.dayOfMonth}</TableCell>
-                    <TableCell className="text-right font-medium">
-                      {formatter.format(Number(item.amount))}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end gap-2">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8"
-                          onClick={() => setEditing(item)}
-                        >
-                          <Pencil className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8 text-destructive"
-                          onClick={() => deleteEntry(item.id)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
+                  <div
+                    key={item.id}
+                    className="rounded-lg border border-border/60 bg-card/60 p-4 shadow-sm"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <div className="text-sm text-muted-foreground">Descrição</div>
+                        <div className="text-base font-semibold">{item.name}</div>
                       </div>
-                    </TableCell>
-                  </TableRow>
+                      <div className="text-right">
+                        <div className="text-xs text-muted-foreground">Valor</div>
+                        <div className="text-base font-semibold text-foreground">
+                          {formatter.format(Number(item.amount))}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="mt-3 text-sm">
+                      <div className="text-xs text-muted-foreground">Conta</div>
+                      <div className="font-medium">
+                        {accounts?.find((acc) => acc.id === item.accountId)?.name || "-"}
+                      </div>
+                    </div>
+                    <div className="mt-3 flex justify-end gap-2">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8"
+                        onClick={() => setEditing(item)}
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 text-destructive"
+                        onClick={() => deleteEntry(item.id)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
                 ))}
-              </TableBody>
-            </Table>
+              </div>
+
+              <div className="hidden w-full overflow-x-auto pb-2 md:block">
+                <Table className="min-w-[640px]">
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="min-w-[200px]">Descrição</TableHead>
+                      <TableHead className="min-w-[160px]">Conta</TableHead>
+                      <TableHead className="text-right min-w-[140px]">Valor</TableHead>
+                      <TableHead className="w-[80px]"></TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {monthEntries.map((item) => (
+                      <TableRow key={item.id}>
+                        <TableCell className="font-medium">{item.name}</TableCell>
+                        <TableCell>{accounts?.find((acc) => acc.id === item.accountId)?.name || "-"}</TableCell>
+                        <TableCell className="text-right font-medium">
+                          {formatter.format(Number(item.amount))}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex justify-end gap-2">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8"
+                              onClick={() => setEditing(item)}
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 text-destructive"
+                              onClick={() => deleteEntry(item.id)}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </>
           )}
         </CardContent>
       </Card>

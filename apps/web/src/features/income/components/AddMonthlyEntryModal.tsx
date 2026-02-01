@@ -11,11 +11,11 @@ import { useAccounts } from "@/features/accounts";
 import { useCategories } from "@/features/categories";
 import { useCreateIncomeEntry } from "../hooks/use-income";
 import { Plus } from "lucide-react";
+import { cn } from "@/shared/lib/utils";
 
 const formSchema = z.object({
   name: z.string().min(2, "Informe a descrição"),
   amount: z.coerce.number().positive("Informe um valor válido"),
-  dayOfMonth: z.coerce.number().min(1).max(28),
   accountId: z.coerce.number(),
   categoryId: z.coerce.number().optional(),
   month: z.coerce.number().min(1).max(12),
@@ -24,7 +24,13 @@ const formSchema = z.object({
 
 type FormValues = z.infer<typeof formSchema>;
 
-export function AddMonthlyEntryModal({ defaultYear }: { defaultYear: number }) {
+export function AddMonthlyEntryModal({
+  defaultYear,
+  triggerClassName,
+}: {
+  defaultYear: number;
+  triggerClassName?: string;
+}) {
   const [open, setOpen] = useState(false);
   const { mutate, isPending } = useCreateIncomeEntry();
   const { data: accounts } = useAccounts();
@@ -33,7 +39,6 @@ export function AddMonthlyEntryModal({ defaultYear }: { defaultYear: number }) {
   const { register, handleSubmit, formState: { errors }, reset, setValue } = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      dayOfMonth: 10,
       month: new Date().getMonth() + 1,
       year: defaultYear,
     },
@@ -46,7 +51,6 @@ export function AddMonthlyEntryModal({ defaultYear }: { defaultYear: number }) {
       {
         name: data.name,
         amount: data.amount.toString(),
-        dayOfMonth: data.dayOfMonth,
         accountId: Number(data.accountId),
         categoryId: data.categoryId ? Number(data.categoryId) : undefined,
         month: data.month,
@@ -56,7 +60,6 @@ export function AddMonthlyEntryModal({ defaultYear }: { defaultYear: number }) {
         onSuccess: () => {
           setOpen(false);
           reset({
-            dayOfMonth: 10,
             month: new Date().getMonth() + 1,
             year: data.year,
           });
@@ -68,7 +71,7 @@ export function AddMonthlyEntryModal({ defaultYear }: { defaultYear: number }) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button className="gap-2">
+        <Button className={cn("gap-2", triggerClassName)}>
           <Plus className="h-4 w-4" />
           Nova entrada
         </Button>
@@ -84,16 +87,10 @@ export function AddMonthlyEntryModal({ defaultYear }: { defaultYear: number }) {
             {errors.name && <p className="text-xs text-destructive">{errors.name.message}</p>}
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label>Valor</Label>
-              <Input type="number" step="0.01" {...register("amount")} />
-              {errors.amount && <p className="text-xs text-destructive">{errors.amount.message}</p>}
-            </div>
-            <div className="space-y-2">
-              <Label>Dia do mês</Label>
-              <Input type="number" min={1} max={28} {...register("dayOfMonth")} />
-            </div>
+          <div className="space-y-2">
+            <Label>Valor</Label>
+            <Input type="number" step="0.01" {...register("amount")} />
+            {errors.amount && <p className="text-xs text-destructive">{errors.amount.message}</p>}
           </div>
 
           <div className="grid grid-cols-2 gap-4">

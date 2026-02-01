@@ -116,7 +116,6 @@ export const incomeEntries = pgTable("income_entries", {
   userId: text("user_id").notNull().references(() => users.id),
   name: text("name").notNull(),
   amount: numeric("amount", { precision: 12, scale: 2 }).notNull(),
-  dayOfMonth: integer("day_of_month").notNull(),
   month: integer("month").notNull(),
   year: integer("year").notNull(),
   accountId: integer("account_id").notNull().references(() => accounts.id),

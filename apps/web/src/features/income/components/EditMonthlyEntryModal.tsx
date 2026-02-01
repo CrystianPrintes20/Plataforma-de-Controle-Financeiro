@@ -15,7 +15,6 @@ import type { IncomeEntry } from "@shared/schema";
 const formSchema = z.object({
   name: z.string().min(2, "Informe a descrição"),
   amount: z.coerce.number().positive("Informe um valor válido"),
-  dayOfMonth: z.coerce.number().min(1).max(28),
   accountId: z.coerce.number(),
   categoryId: z.coerce.number().optional(),
   month: z.coerce.number().min(1).max(12),
@@ -45,7 +44,6 @@ export function EditMonthlyEntryModal({
     defaultValues: {
       name: item.name,
       amount: Number(item.amount),
-      dayOfMonth: item.dayOfMonth,
       accountId: item.accountId,
       categoryId: item.categoryId ?? undefined,
       month: defaultMonth,
@@ -57,7 +55,6 @@ export function EditMonthlyEntryModal({
     reset({
       name: item.name,
       amount: Number(item.amount),
-      dayOfMonth: item.dayOfMonth,
       accountId: item.accountId,
       categoryId: item.categoryId ?? undefined,
       month: defaultMonth,
@@ -71,14 +68,12 @@ export function EditMonthlyEntryModal({
   const watchedCategoryId = watch("categoryId");
 
   const onSubmit = (data: FormValues) => {
-    const monthIndex = data.month - 1;
     mutate(
       {
         id: item.id,
         payload: {
           name: data.name,
           amount: data.amount.toString(),
-          dayOfMonth: data.dayOfMonth,
           accountId: Number(data.accountId),
           categoryId: data.categoryId ? Number(data.categoryId) : undefined,
           month: data.month,
@@ -104,16 +99,10 @@ export function EditMonthlyEntryModal({
             {errors.name && <p className="text-xs text-destructive">{errors.name.message}</p>}
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label>Valor</Label>
-              <Input type="number" step="0.01" {...register("amount")} />
-              {errors.amount && <p className="text-xs text-destructive">{errors.amount.message}</p>}
-            </div>
-            <div className="space-y-2">
-              <Label>Dia do mês</Label>
-              <Input type="number" min={1} max={28} {...register("dayOfMonth")} />
-            </div>
+          <div className="space-y-2">
+            <Label>Valor</Label>
+            <Input type="number" step="0.01" {...register("amount")} />
+            {errors.amount && <p className="text-xs text-destructive">{errors.amount.message}</p>}
           </div>
 
           <div className="grid grid-cols-2 gap-4">

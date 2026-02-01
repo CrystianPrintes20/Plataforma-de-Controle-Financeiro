@@ -6,7 +6,6 @@ import { useToast } from "@/shared/hooks/use-toast";
 type IncomeEntryInput = {
   name: string;
   amount: string | number;
-  dayOfMonth: number;
   month: number;
   year: number;
   accountId: number;

@@ -10,6 +10,7 @@ import { apiSend } from "@/shared/lib/api";
 import { useToast } from "@/shared/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
 import { Upload } from "lucide-react";
+import { cn } from "@/shared/lib/utils";
 
 type ParsedRow = {
   row: number;
@@ -17,7 +18,7 @@ type ParsedRow = {
   error?: string;
 };
 
-const fixedHeaders = ["descricao", "mes", "ano", "valor", "dia_do_mes", "conta", "categoria"];
+const fixedHeaders = ["descricao", "mes", "ano", "valor", "conta", "categoria"];
 const monthHeaders = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"];
 
 function normalizeHeader(value: string) {
@@ -86,10 +87,9 @@ function parseAmount(value: string | undefined | null) {
   return Number.isNaN(amount) ? null : amount;
 }
 
-export function ImportIncomeModal() {
+export function ImportIncomeModal({ triggerClassName }: { triggerClassName?: string }) {
   const [open, setOpen] = useState(false);
   const [fixedYear, setFixedYear] = useState(String(new Date().getFullYear()));
-  const [fixedDay, setFixedDay] = useState("10");
   const [fixedAccountId, setFixedAccountId] = useState("");
   const [fileName, setFileName] = useState("");
   const [parsed, setParsed] = useState<ParsedRow[]>([]);
@@ -150,9 +150,7 @@ export function ImportIncomeModal() {
           else if (!data.mes || Number.isNaN(Number(data.mes))) error = "Mês obrigatório";
           else if (!data.ano || Number.isNaN(Number(data.ano))) error = "Ano obrigatório";
           else if (!data.valor || parseAmount(data.valor) === null) error = "Valor inválido";
-          else if (!data.dia_do_mes || Number.isNaN(Number(data.dia_do_mes))) {
-            error = "Dia do mês inválido";
-          } else if (!data.conta || !accountMap.has(data.conta.trim().toLowerCase())) {
+          else if (!data.conta || !accountMap.has(data.conta.trim().toLowerCase())) {
             error = "Conta não encontrada";
           }
         }
@@ -165,7 +163,7 @@ export function ImportIncomeModal() {
 
   const handleDownloadTemplate = () => {
     const headers = expectedHeaders.join(";");
-    const example = "Salário;1;2025;5000,00;10;PicPay;Salary";
+    const example = "Salário;1;2025;5000,00;PicPay;Salary";
     const blob = new Blob([`${headers}\n${example}\n`], { type: "text/csv;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const anchor = document.createElement("a");
@@ -199,13 +197,11 @@ export function ImportIncomeModal() {
             ? categoryMap.get(row.data.categoria.trim().toLowerCase())
             : undefined;
           let amount = parseAmount(row.data.valor);
-          const dayOfMonth = row.data.dia_do_mes ? Number(row.data.dia_do_mes) : Number(fixedDay);
           const yearValue = row.data.ano ? Number(row.data.ano) : Number(fixedYear);
           const monthValue = row.data.mes ? Number(row.data.mes) : null;
 
           if (
             (!isMatrixRow && amount === null) ||
-            Number.isNaN(dayOfMonth) ||
             Number.isNaN(yearValue) ||
             Number.isNaN(accountId)
           ) {
@@ -226,7 +222,6 @@ export function ImportIncomeModal() {
                 {
                   name: row.data.descricao,
                   amount: String(value),
-                  dayOfMonth,
                   accountId,
                   categoryId,
                   month: monthIndex + 1,
@@ -244,7 +239,6 @@ export function ImportIncomeModal() {
               {
                 name: row.data.descricao,
                 amount: String(amount),
-                dayOfMonth,
                 accountId,
                 categoryId,
                 month: monthIndex + 1,
@@ -271,12 +265,12 @@ export function ImportIncomeModal() {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" className="gap-2">
+        <Button variant="outline" className={cn("gap-2", triggerClassName)}>
           <Upload className="h-4 w-4" />
           Importar entradas
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[520px]">
+      <DialogContent className="w-[calc(100%-2rem)] sm:max-w-[560px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Importar entradas</DialogTitle>
         </DialogHeader>
@@ -297,16 +291,6 @@ export function ImportIncomeModal() {
               </SelectContent>
             </Select>
             <p className="text-xs text-muted-foreground">Usado apenas se o arquivo não tiver coluna "ano".</p>
-          </div>
-          <div className="space-y-1">
-            <span className="text-xs text-muted-foreground">Dia do mês</span>
-            <Input
-              type="number"
-              min={1}
-              max={28}
-              value={fixedDay}
-              onChange={(event) => setFixedDay(event.target.value)}
-            />
           </div>
           <div className="space-y-1">
             <span className="text-xs text-muted-foreground">Conta padrão</span>
@@ -338,6 +322,7 @@ export function ImportIncomeModal() {
             <Input
               type="file"
               accept=".csv"
+              className="w-full"
               onChange={(event) => {
                 const file = event.target.files?.[0] ?? null;
                 setFileName(file?.name ?? "");
@@ -363,7 +348,7 @@ export function ImportIncomeModal() {
             </div>
           )}
 
-          <div className="flex justify-end gap-2 pt-2">
+          <div className="flex flex-col-reverse gap-2 pt-2 sm:flex-row sm:justify-end">
             <Button variant="outline" onClick={() => setOpen(false)}>
               Cancelar
             </Button>
