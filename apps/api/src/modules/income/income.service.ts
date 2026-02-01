@@ -1,4 +1,6 @@
-import type { FixedIncome, InsertFixedIncome } from "@shared/schema";
+import type { IncomeEntry, InsertIncomeEntry } from "@shared/schema";
+import { env } from "../../config/env";
+import { AccountsRepository } from "../accounts/accounts.repository";
 import { IncomeRepository } from "./income.repository";
 
 function startOfMonth(date: Date) {
@@ -9,84 +11,108 @@ function endOfMonth(date: Date) {
   return new Date(date.getFullYear(), date.getMonth() + 1, 0, 23, 59, 59, 999);
 }
 
-function firstDayNextMonth(date: Date) {
-  return new Date(date.getFullYear(), date.getMonth() + 1, 1);
-}
-
 export class IncomeService {
-  constructor(private readonly repo = new IncomeRepository()) {}
+  constructor(
+    private readonly repo = new IncomeRepository(),
+    private readonly accountsRepo = new AccountsRepository()
+  ) {}
 
-  listFixed(userId: string) {
-    return this.repo.listFixedByUser(userId).then((rows) =>
-      rows.filter((row) => !row.endsAt || row.endsAt >= new Date())
-    );
+  private shouldApplyToBalance(entry: Pick<IncomeEntry, "year" | "month">) {
+    const { incomeBalanceFromYear, incomeBalanceFromMonth } = env;
+    if (entry.year > incomeBalanceFromYear) return true;
+    if (entry.year < incomeBalanceFromYear) return false;
+    return entry.month >= incomeBalanceFromMonth;
   }
 
-  async createFixed(userId: string, input: InsertFixedIncome) {
-    return this.repo.createFixed({ ...input, userId });
+  listEntries(userId: string) {
+    return this.repo.listEntriesByUser(userId);
   }
 
-  async updateFixedFutureOnly(
+  async createEntry(userId: string, input: InsertIncomeEntry) {
+    const created = await this.repo.createEntry({ ...input, userId });
+
+    if (this.shouldApplyToBalance(created)) {
+      const account = await this.accountsRepo.getById(created.accountId);
+      if (account) {
+        const newBalance = Number(account.balance) + Number(created.amount);
+        await this.accountsRepo.update(created.accountId, userId, {
+          balance: newBalance.toString(),
+        });
+      }
+    }
+
+    return created;
+  }
+
+  async updateEntry(
     userId: string,
     id: number,
-    updates: Partial<InsertFixedIncome>
-  ): Promise<FixedIncome | undefined> {
-    const existing = await this.repo.getFixedById(id);
+    updates: Partial<InsertIncomeEntry>
+  ): Promise<IncomeEntry | undefined> {
+    const existing = await this.repo.getEntryById(id);
     if (!existing || existing.userId !== userId) return undefined;
 
-    const now = new Date();
-    const endCurrentMonth = endOfMonth(now);
-    await this.repo.updateFixed(id, userId, { endsAt: endCurrentMonth });
+    if (this.shouldApplyToBalance(existing)) {
+      const account = await this.accountsRepo.getById(existing.accountId);
+      if (account) {
+        const balance = Number(account.balance) - Number(existing.amount);
+        await this.accountsRepo.update(existing.accountId, userId, {
+          balance: balance.toString(),
+        });
+      }
+    }
 
-    const nextStart = firstDayNextMonth(now);
-    const newRecord: InsertFixedIncome = {
-      userId,
-      name: updates.name ?? existing.name,
-      amount: updates.amount ?? existing.amount,
-      dayOfMonth: updates.dayOfMonth ?? existing.dayOfMonth,
-      accountId: updates.accountId ?? existing.accountId,
-      categoryId: updates.categoryId ?? existing.categoryId ?? undefined,
-      startsAt: nextStart,
-    } as InsertFixedIncome;
+    const updated = await this.repo.updateEntry(id, userId, updates);
+    if (!updated) return undefined;
 
-    return this.repo.createFixed(newRecord);
+    if (this.shouldApplyToBalance(updated)) {
+      const account = await this.accountsRepo.getById(updated.accountId);
+      if (account) {
+        const balance = Number(account.balance) + Number(updated.amount);
+        await this.accountsRepo.update(updated.accountId, userId, {
+          balance: balance.toString(),
+        });
+      }
+    }
+
+    return updated;
   }
 
-  async deleteFixedFutureOnly(userId: string, id: number): Promise<boolean> {
-    const existing = await this.repo.getFixedById(id);
+  async deleteEntry(userId: string, id: number): Promise<boolean> {
+    const existing = await this.repo.getEntryById(id);
     if (!existing || existing.userId !== userId) return false;
-    await this.repo.updateFixed(id, userId, { endsAt: new Date() });
+
+    if (this.shouldApplyToBalance(existing)) {
+      const account = await this.accountsRepo.getById(existing.accountId);
+      if (account) {
+        const balance = Number(account.balance) - Number(existing.amount);
+        await this.accountsRepo.update(existing.accountId, userId, {
+          balance: balance.toString(),
+        });
+      }
+    }
+
+    await this.repo.deleteEntry(id, userId);
     return true;
   }
 
   async annualSummary(userId: string, year: number) {
-    const fixed = await this.repo.listFixedByUser(userId);
-    const variable = await this.repo.listIncomeTransactionsByYear(userId, year);
+    const entries = await this.repo.listEntriesByUser(userId);
 
     const months = Array.from({ length: 12 }).map((_, idx) => {
       const monthDate = new Date(year, idx, 1);
       const monthStart = startOfMonth(monthDate);
       const monthEnd = endOfMonth(monthDate);
 
-      const fixedTotal = fixed.reduce((sum, item) => {
-        const startsAt = item.startsAt ?? item.createdAt ?? monthStart;
-        const endsAt = item.endsAt ?? null;
-        const active = startsAt <= monthEnd && (!endsAt || endsAt >= monthStart);
+      const entriesTotal = entries.reduce((sum, item) => {
+        const active = item.year === year && item.month === idx + 1;
         return active ? sum + Number(item.amount) : sum;
       }, 0);
 
-      const variableTotal = variable
-        .filter((tx) => {
-          const date = new Date(tx.date);
-          return date >= monthStart && date <= monthEnd;
-        })
-        .reduce((sum, tx) => sum + Number(tx.amount), 0);
-
       return {
         month: idx + 1,
-        fixedTotal,
-        variableTotal,
-        total: fixedTotal + variableTotal,
+        entriesTotal,
+        total: entriesTotal,
       };
     });
 

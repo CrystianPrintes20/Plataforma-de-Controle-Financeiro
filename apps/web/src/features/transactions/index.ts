@@ -5,4 +5,5 @@ export {
   useCreateTransaction,
   useUpdateTransaction,
   useDeleteTransaction,
+  type TransactionFilters,
 } from "./hooks/use-transactions";

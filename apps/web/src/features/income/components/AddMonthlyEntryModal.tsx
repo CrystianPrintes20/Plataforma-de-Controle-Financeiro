@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -9,46 +9,83 @@ import { Label } from "@/shared/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/ui/select";
 import { useAccounts } from "@/features/accounts";
 import { useCategories } from "@/features/categories";
-import { useCreateFixedIncome } from "../hooks/use-income";
+import { useCreateIncomeEntry } from "../hooks/use-income";
 import { Plus } from "lucide-react";
+import { cn } from "@/shared/lib/utils";
+import { useMoneyFormatter } from "@/shared";
 
 const formSchema = z.object({
   name: z.string().min(2, "Informe a descrição"),
   amount: z.coerce.number().positive("Informe um valor válido"),
-  dayOfMonth: z.coerce.number().min(1).max(28),
   accountId: z.coerce.number(),
   categoryId: z.coerce.number().optional(),
+  month: z.coerce.number().min(1).max(12),
+  year: z.coerce.number().min(2000),
 });
 
 type FormValues = z.infer<typeof formSchema>;
 
-export function AddFixedIncomeModal() {
+export function AddMonthlyEntryModal({
+  defaultYear,
+  triggerClassName,
+}: {
+  defaultYear: number;
+  triggerClassName?: string;
+}) {
   const [open, setOpen] = useState(false);
-  const { mutate, isPending } = useCreateFixedIncome();
+  const { currency, formatter } = useMoneyFormatter();
+  const [amountInput, setAmountInput] = useState("");
+  const { mutate, isPending } = useCreateIncomeEntry();
   const { data: accounts } = useAccounts();
   const { data: categories } = useCategories();
 
   const { register, handleSubmit, formState: { errors }, reset, setValue } = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      dayOfMonth: 10,
+      month: new Date().getMonth() + 1,
+      year: defaultYear,
     },
   });
 
   const incomeCategories = (categories ?? []).filter((cat) => cat.type === "income");
 
+  const formattedAmount = useMemo(() => {
+    if (!amountInput) return "";
+    const numeric = Number(amountInput) / 100;
+    return formatter.format(Number.isNaN(numeric) ? 0 : numeric);
+  }, [amountInput, formatter]);
+
+  const handleAmountChange = (value: string) => {
+    const onlyDigits = value.replace(/\D/g, "");
+    setAmountInput(onlyDigits);
+    const numeric = Number(onlyDigits) / 100;
+    setValue("amount", Number.isNaN(numeric) ? 0 : numeric);
+  };
+
+  const parsedAmount = () => {
+    const numeric = Number(amountInput) / 100;
+    return Number.isNaN(numeric) ? 0 : numeric;
+  };
+
   const onSubmit = (data: FormValues) => {
+    const amountValue = parsedAmount();
     mutate(
       {
-        ...data,
-        amount: data.amount.toString(),
+        name: data.name,
+        amount: amountValue.toString(),
         accountId: Number(data.accountId),
         categoryId: data.categoryId ? Number(data.categoryId) : undefined,
+        month: data.month,
+        year: data.year,
       },
       {
         onSuccess: () => {
           setOpen(false);
-          reset();
+          reset({
+            month: new Date().getMonth() + 1,
+            year: data.year,
+          });
+          setAmountInput("");
         },
       }
     );
@@ -57,31 +94,57 @@ export function AddFixedIncomeModal() {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button className="gap-2">
+        <Button className={cn("gap-2", triggerClassName)}>
           <Plus className="h-4 w-4" />
-          Ganho fixo
+          Nova entrada
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[440px]">
         <DialogHeader>
-          <DialogTitle>Novo ganho fixo</DialogTitle>
+          <DialogTitle>Nova entrada mensal</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 pt-2">
+          <input type="hidden" {...register("amount")} />
           <div className="space-y-2">
             <Label>Descrição</Label>
             <Input placeholder="Ex: Salário" {...register("name")} />
             {errors.name && <p className="text-xs text-destructive">{errors.name.message}</p>}
           </div>
 
+          <div className="space-y-2">
+            <Label>Valor ({currency})</Label>
+            <Input
+              type="text"
+              inputMode="numeric"
+              value={formattedAmount}
+              onChange={(event) => handleAmountChange(event.target.value)}
+              placeholder={formatter.format(0)}
+            />
+            {errors.amount && <p className="text-xs text-destructive">{errors.amount.message}</p>}
+          </div>
+
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label>Valor</Label>
-              <Input type="number" step="0.01" {...register("amount")} />
-              {errors.amount && <p className="text-xs text-destructive">{errors.amount.message}</p>}
+              <Label>Mês</Label>
+              <Select
+                defaultValue={String(new Date().getMonth() + 1)}
+                onValueChange={(val) => setValue("month", Number(val))}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {Array.from({ length: 12 }, (_, i) => i + 1).map((month) => (
+                    <SelectItem key={month} value={String(month)}>
+                      {new Date(2023, month - 1, 1).toLocaleString("pt-BR", { month: "short" })}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <div className="space-y-2">
-              <Label>Dia do mês</Label>
-              <Input type="number" min={1} max={28} {...register("dayOfMonth")} />
+              <Label>Ano</Label>
+              <Input type="number" {...register("year")} />
             </div>
           </div>
 

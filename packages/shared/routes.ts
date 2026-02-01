@@ -6,7 +6,7 @@ import {
   insertDebtSchema, debts,
   insertInvestmentSchema, investments,
   insertGoalSchema, goals,
-  insertFixedIncomeSchema, fixedIncomes
+  insertIncomeEntrySchema, incomeEntries
 } from './schema';
 
 // Shared Error Schemas
@@ -306,31 +306,31 @@ export const api = {
     },
   },
   income: {
-    fixed: {
+    entries: {
       list: {
         method: 'GET' as const,
-        path: '/api/income/fixed',
+        path: '/api/income/entries',
         responses: {
-          200: z.array(z.custom<typeof fixedIncomes.$inferSelect>()),
+          200: z.array(z.custom<typeof incomeEntries.$inferSelect>()),
           401: errorSchemas.unauthorized,
         },
       },
       create: {
         method: 'POST' as const,
-        path: '/api/income/fixed',
-        input: insertFixedIncomeSchema,
+        path: '/api/income/entries',
+        input: insertIncomeEntrySchema,
         responses: {
-          201: z.custom<typeof fixedIncomes.$inferSelect>(),
+          201: z.custom<typeof incomeEntries.$inferSelect>(),
           400: errorSchemas.validation,
           401: errorSchemas.unauthorized,
         },
       },
       update: {
         method: 'PUT' as const,
-        path: '/api/income/fixed/:id',
-        input: insertFixedIncomeSchema.partial(),
+        path: '/api/income/entries/:id',
+        input: insertIncomeEntrySchema.partial(),
         responses: {
-          200: z.custom<typeof fixedIncomes.$inferSelect>(),
+          200: z.custom<typeof incomeEntries.$inferSelect>(),
           404: errorSchemas.notFound,
           400: errorSchemas.validation,
           401: errorSchemas.unauthorized,
@@ -338,7 +338,7 @@ export const api = {
       },
       delete: {
         method: 'DELETE' as const,
-        path: '/api/income/fixed/:id',
+        path: '/api/income/entries/:id',
         responses: {
           204: z.void(),
           404: errorSchemas.notFound,
@@ -351,15 +351,14 @@ export const api = {
         method: 'GET' as const,
         path: '/api/income/annual',
         input: z.object({
-          year: z.coerce.number(),
+          year: z.coerce.number().optional(),
         }).optional(),
         responses: {
           200: z.object({
             year: z.number(),
             months: z.array(z.object({
               month: z.number(),
-              fixedTotal: z.number(),
-              variableTotal: z.number(),
+              entriesTotal: z.number(),
               total: z.number(),
             })),
           }),

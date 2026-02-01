@@ -11,4 +11,6 @@ export const env = {
   authEmail: parsed.AUTH_EMAIL,
   authPassword: parsed.AUTH_PASSWORD,
   currency: parsed.CURRENCY,
+  incomeBalanceFromYear: parsed.INCOME_BALANCE_FROM_YEAR,
+  incomeBalanceFromMonth: parsed.INCOME_BALANCE_FROM_MONTH,
 };
