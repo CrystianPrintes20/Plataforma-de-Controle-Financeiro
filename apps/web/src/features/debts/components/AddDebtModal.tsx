@@ -11,6 +11,7 @@ import { Plus } from "lucide-react";
 import { useMoneyFormatter } from "@/shared";
 import { useCreateDebt } from "../hooks/use-debts";
 import { cn } from "@/shared/lib/utils";
+import { useAccounts } from "@/features/accounts";
 
 const optionalNumber = (schema: z.ZodNumber) =>
   z.preprocess((value) => {
@@ -25,6 +26,7 @@ const formSchema = z.object({
   remainingAmount: z.coerce.number().min(0, "Informe o saldo restante"),
   year: z.coerce.number().min(2000),
   month: z.coerce.number().min(1).max(12),
+  accountId: optionalNumber(z.number()),
   interestRate: optionalNumber(z.number().min(0)),
   dueDate: optionalNumber(z.number().int().min(1).max(31)),
   minPayment: optionalNumber(z.number().min(0)),
@@ -37,6 +39,7 @@ export function AddDebtModal({ triggerClassName }: { triggerClassName?: string }
   const [open, setOpen] = useState(false);
   const { formatter, currency } = useMoneyFormatter();
   const { mutate, isPending } = useCreateDebt();
+  const { data: accounts } = useAccounts();
   const [totalInput, setTotalInput] = useState("");
   const [remainingInput, setRemainingInput] = useState("");
   const [minPaymentInput, setMinPaymentInput] = useState("");
@@ -90,6 +93,7 @@ export function AddDebtModal({ triggerClassName }: { triggerClassName?: string }
         remainingAmount: data.remainingAmount.toString(),
         year: data.year,
         month: data.month,
+        accountId: data.accountId,
         interestRate: data.interestRate !== undefined ? data.interestRate.toString() : undefined,
         dueDate: data.dueDate,
         minPayment: data.minPayment !== undefined ? data.minPayment.toString() : undefined,
@@ -125,6 +129,7 @@ export function AddDebtModal({ triggerClassName }: { triggerClassName?: string }
           <input type="hidden" {...register("minPayment")} />
           <input type="hidden" {...register("status")} />
           <input type="hidden" {...register("month")} />
+          <input type="hidden" {...register("accountId")} />
 
           <div className="space-y-2">
             <Label>Descrição</Label>
@@ -197,6 +202,23 @@ export function AddDebtModal({ triggerClassName }: { triggerClassName?: string }
                 placeholder={formatter.format(0)}
               />
             </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label>Conta (opcional)</Label>
+            <Select onValueChange={(val) => setValue("accountId", val === "0" ? undefined : Number(val))}>
+              <SelectTrigger>
+                <SelectValue placeholder="Selecione a conta" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="0">Sem conta</SelectItem>
+                {accounts?.map((account) => (
+                  <SelectItem key={account.id} value={String(account.id)}>
+                    {account.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="space-y-2">

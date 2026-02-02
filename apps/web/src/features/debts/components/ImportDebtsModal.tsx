@@ -3,6 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Button } from "@/shared/ui/button";
 import { Input } from "@/shared/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/ui/select";
+import { useAccounts } from "@/features/accounts";
 import { useToast } from "@/shared/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
 import { Upload } from "lucide-react";
@@ -121,11 +122,13 @@ function parseDueDate(value: string | undefined | null) {
 export function ImportDebtsModal({ triggerClassName }: { triggerClassName?: string }) {
   const [open, setOpen] = useState(false);
   const [fixedYear, setFixedYear] = useState(String(new Date().getFullYear()));
+  const [fixedAccountId, setFixedAccountId] = useState("");
   const [fileName, setFileName] = useState("");
   const [parsed, setParsed] = useState<ParsedRow[]>([]);
   const [isImporting, setIsImporting] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { data: accounts } = useAccounts();
 
   const parsedStatus = useMemo(() => statusMap, []);
 
@@ -217,6 +220,7 @@ export function ImportDebtsModal({ triggerClassName }: { triggerClassName?: stri
           : "active";
         const rowYear = row.data.ano ? Number(row.data.ano) : Number(fixedYear);
         if (Number.isNaN(rowYear)) continue;
+        const accountId = fixedAccountId ? Number(fixedAccountId) : undefined;
 
         if (isMatrixRow) {
           const monthValues = monthHeaders.map((month) => parseAmount(row.data[month] ?? ""));
@@ -232,6 +236,7 @@ export function ImportDebtsModal({ triggerClassName }: { triggerClassName?: stri
               remainingAmount: String(remaining),
               year: rowYear,
               month: monthIndex + 1,
+              accountId,
               status,
             });
           }
@@ -255,6 +260,7 @@ export function ImportDebtsModal({ triggerClassName }: { triggerClassName?: stri
             status,
             year: rowYear,
             month: monthValue,
+            accountId,
           });
         }
       }
@@ -303,6 +309,21 @@ export function ImportDebtsModal({ triggerClassName }: { triggerClassName?: stri
               </SelectContent>
             </Select>
             <p className="text-xs text-muted-foreground">Usado apenas se o arquivo não tiver coluna \"ano\".</p>
+          </div>
+          <div className="space-y-1">
+            <span className="text-xs text-muted-foreground">Conta padrão (opcional)</span>
+            <Select value={fixedAccountId} onValueChange={setFixedAccountId}>
+              <SelectTrigger>
+                <SelectValue placeholder="Selecione a conta" />
+              </SelectTrigger>
+              <SelectContent>
+                {accounts?.map((account) => (
+                  <SelectItem key={account.id} value={String(account.id)}>
+                    {account.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           <div className="rounded-md border border-border/50 bg-muted/30 p-3 text-sm text-muted-foreground">
             <p className="font-medium text-foreground mb-1">Formato esperado (CSV)</p>

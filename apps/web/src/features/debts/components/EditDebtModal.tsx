@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useMoneyFormatter } from "@/shared";
 import { useUpdateDebt } from "../hooks/use-debts";
 import type { Debt } from "@shared/schema";
+import { useAccounts } from "@/features/accounts";
 
 const optionalNumber = (schema: z.ZodNumber) =>
   z.preprocess((value) => {
@@ -24,6 +25,7 @@ const formSchema = z.object({
   remainingAmount: z.coerce.number().min(0, "Informe o saldo restante"),
   year: z.coerce.number().min(2000),
   month: z.coerce.number().min(1).max(12),
+  accountId: optionalNumber(z.number()),
   interestRate: optionalNumber(z.number().min(0)),
   dueDate: optionalNumber(z.number().int().min(1).max(31)),
   minPayment: optionalNumber(z.number().min(0)),
@@ -43,6 +45,7 @@ export function EditDebtModal({
 }) {
   const { formatter, currency } = useMoneyFormatter();
   const { mutate, isPending } = useUpdateDebt();
+  const { data: accounts } = useAccounts();
   const [totalInput, setTotalInput] = useState("");
   const [remainingInput, setRemainingInput] = useState("");
   const [minPaymentInput, setMinPaymentInput] = useState("");
@@ -55,6 +58,7 @@ export function EditDebtModal({
       remainingAmount: Number(debt.remainingAmount),
       year: debt.year ?? new Date().getFullYear(),
       month: debt.month ?? new Date().getMonth() + 1,
+      accountId: debt.accountId ?? undefined,
       interestRate: debt.interestRate ? Number(debt.interestRate) : undefined,
       dueDate: debt.dueDate ?? undefined,
       minPayment: debt.minPayment ? Number(debt.minPayment) : undefined,
@@ -71,6 +75,7 @@ export function EditDebtModal({
       remainingAmount: Number(debt.remainingAmount),
       year: debt.year ?? new Date().getFullYear(),
       month: debt.month ?? new Date().getMonth() + 1,
+      accountId: debt.accountId ?? undefined,
       interestRate: debt.interestRate ? Number(debt.interestRate) : undefined,
       dueDate: debt.dueDate ?? undefined,
       minPayment: debt.minPayment ? Number(debt.minPayment) : undefined,
@@ -138,6 +143,7 @@ export function EditDebtModal({
           remainingAmount: data.remainingAmount.toString(),
           year: data.year,
           month: data.month,
+          accountId: data.accountId,
           interestRate: data.interestRate !== undefined ? data.interestRate.toString() : undefined,
           dueDate: data.dueDate,
           minPayment: data.minPayment !== undefined ? data.minPayment.toString() : undefined,
@@ -162,6 +168,7 @@ export function EditDebtModal({
           <input type="hidden" {...register("minPayment")} />
           <input type="hidden" {...register("status")} />
           <input type="hidden" {...register("month")} />
+          <input type="hidden" {...register("accountId")} />
 
           <div className="space-y-2">
             <Label>Descrição</Label>
@@ -237,6 +244,26 @@ export function EditDebtModal({
                 placeholder={formatter.format(0)}
               />
             </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label>Conta (opcional)</Label>
+            <Select
+              value={watch("accountId") ? String(watch("accountId")) : "0"}
+              onValueChange={(val) => setValue("accountId", val === "0" ? undefined : Number(val))}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Selecione a conta" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="0">Sem conta</SelectItem>
+                {accounts?.map((account) => (
+                  <SelectItem key={account.id} value={String(account.id)}>
+                    {account.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="space-y-2">

@@ -7,6 +7,11 @@ export class DebtsRepository {
     return db.select().from(debts).where(eq(debts.userId, userId));
   }
 
+  async getById(id: number): Promise<Debt | undefined> {
+    const [debt] = await db.select().from(debts).where(eq(debts.id, id));
+    return debt;
+  }
+
   async create(data: InsertDebt): Promise<Debt> {
     const [debt] = await db.insert(debts).values(data).returning();
     return debt;
@@ -23,5 +28,9 @@ export class DebtsRepository {
       .where(and(eq(debts.id, id), eq(debts.userId, userId)))
       .returning();
     return debt;
+  }
+
+  async delete(id: number, userId: string): Promise<void> {
+    await db.delete(debts).where(and(eq(debts.id, id), eq(debts.userId, userId)));
   }
 }
