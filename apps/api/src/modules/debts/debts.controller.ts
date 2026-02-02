@@ -31,4 +31,13 @@ export function registerDebtRoutes(
     }
     res.json(ok(debt));
   });
+
+  app.delete(api.debts.delete.path, isAuthenticated, async (req: any, res) => {
+    const userId = req.user!.claims.sub;
+    const deleted = await service.delete(Number(req.params.id), userId);
+    if (!deleted) {
+      return res.status(HTTP_STATUS.NOT_FOUND).json(fail("Debt not found"));
+    }
+    res.status(HTTP_STATUS.NO_CONTENT).end();
+  });
 }
