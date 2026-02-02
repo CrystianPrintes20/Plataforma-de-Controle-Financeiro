@@ -66,6 +66,8 @@ export const debts = pgTable("debts", {
   name: text("name").notNull(),
   totalAmount: numeric("total_amount", { precision: 12, scale: 2 }).notNull(),
   remainingAmount: numeric("remaining_amount", { precision: 12, scale: 2 }).notNull(),
+  year: integer("year").notNull(),
+  month: integer("month").notNull(),
   interestRate: numeric("interest_rate", { precision: 5, scale: 2 }), // Annual rate %
   dueDate: integer("due_date"), // Day of month
   minPayment: numeric("min_payment", { precision: 12, scale: 2 }),

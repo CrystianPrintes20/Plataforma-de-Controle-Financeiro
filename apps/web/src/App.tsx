@@ -12,6 +12,7 @@ import { TransactionsPage } from "@/features/transactions";
 import { AccountsPage } from "@/features/accounts";
 import { SettingsPage } from "@/features/settings";
 import { IncomePage } from "@/features/income";
+import { DebtsPage } from "@/features/debts";
 import { AuthPage } from "@/features/auth";
 import NotFoundPage from "@/app/NotFoundPage";
 
@@ -42,8 +43,8 @@ function Router() {
       <Route path="/investments" component={() => <ProtectedRoute component={InvestmentsPage} />} />
       <Route path="/income" component={() => <ProtectedRoute component={IncomePage} />} />
       <Route path="/settings" component={() => <ProtectedRoute component={SettingsPage} />} />
+      <Route path="/debts" component={() => <ProtectedRoute component={DebtsPage} />} />
       {/* Fallback for other routes not yet implemented but linked in nav */}
-      <Route path="/debts" component={() => <ProtectedRoute component={() => <div className="p-8">Dívidas em breve</div>} />} />
       <Route path="/goals" component={() => <ProtectedRoute component={() => <div className="p-8">Metas em breve</div>} />} />
       
       <Route component={NotFoundPage} />
