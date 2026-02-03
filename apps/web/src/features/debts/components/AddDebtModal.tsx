@@ -7,11 +7,13 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Input } from "@/shared/ui/input";
 import { Label } from "@/shared/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/ui/select";
+import { Switch } from "@/shared/ui/switch";
 import { Plus } from "lucide-react";
 import { useMoneyFormatter } from "@/shared";
-import { useCreateDebt } from "../hooks/use-debts";
+import { useCreateDebt, useCreateDebtsBatch } from "../hooks/use-debts";
 import { cn } from "@/shared/lib/utils";
 import { useAccounts } from "@/features/accounts";
+import { useToast } from "@/shared/hooks/use-toast";
 
 const optionalNumber = (schema: z.ZodNumber) =>
   z.preprocess((value) => {
@@ -33,6 +35,30 @@ const formSchema = z.object({
   dueDate: optionalNumber(z.number().int().min(1).max(31)),
   minPayment: optionalNumber(z.number().min(0)),
   status: z.enum(["active", "paid", "defaulted"]).default("active"),
+  replicate: z.boolean().default(false),
+  replicateUntilYear: z.coerce.number().min(2000).optional(),
+  replicateUntilMonth: z.coerce.number().min(1).max(12).optional(),
+}).superRefine((data, ctx) => {
+  if (!data.replicate) return;
+
+  if (!data.replicateUntilYear || !data.replicateUntilMonth) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "Informe até quando deve replicar",
+      path: ["replicateUntilMonth"],
+    });
+    return;
+  }
+
+  const startIndex = data.year * 12 + (data.month - 1);
+  const endIndex = data.replicateUntilYear * 12 + (data.replicateUntilMonth - 1);
+  if (endIndex < startIndex) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "O mês final deve ser igual ou posterior ao mês da competência",
+      path: ["replicateUntilMonth"],
+    });
+  }
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -41,7 +67,9 @@ export function AddDebtModal({ triggerClassName }: { triggerClassName?: string }
   const [open, setOpen] = useState(false);
   const { formatter, currency } = useMoneyFormatter();
   const { mutate, isPending } = useCreateDebt();
+  const { mutate: mutateBatch, isPending: isBatchPending } = useCreateDebtsBatch();
   const { data: accounts } = useAccounts();
+  const { toast } = useToast();
   const [totalInput, setTotalInput] = useState("");
   const [remainingInput, setRemainingInput] = useState("");
   const [minPaymentInput, setMinPaymentInput] = useState("");
@@ -50,7 +78,7 @@ export function AddDebtModal({ triggerClassName }: { triggerClassName?: string }
   const nextMonth = currentMonth === 12 ? 1 : currentMonth + 1;
   const nextYear = currentMonth === 12 ? currentYear + 1 : currentYear;
 
-  const { register, handleSubmit, formState: { errors }, reset, setValue } = useForm<FormValues>({
+  const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       status: "active",
@@ -58,8 +86,48 @@ export function AddDebtModal({ triggerClassName }: { triggerClassName?: string }
       month: currentMonth,
       paymentYear: nextYear,
       paymentMonth: nextMonth,
+      replicate: false,
+      replicateUntilYear: currentYear,
+      replicateUntilMonth: currentMonth,
     },
   });
+
+  const { register, handleSubmit, formState: { errors }, reset, setValue } = form;
+  const replicate = form.watch("replicate");
+
+  const buildReplicatedPayloads = (data: FormValues) => {
+    if (!data.replicateUntilYear || !data.replicateUntilMonth) return [];
+    const startIndex = data.year * 12 + (data.month - 1);
+    const endIndex = data.replicateUntilYear * 12 + (data.replicateUntilMonth - 1);
+    const paymentStartIndex = data.paymentYear * 12 + (data.paymentMonth - 1);
+    const paymentOffset = paymentStartIndex - startIndex;
+    const payloads = [];
+
+    for (let index = startIndex; index <= endIndex; index += 1) {
+      const year = Math.floor(index / 12);
+      const month = (index % 12) + 1;
+      const paymentIndex = index + paymentOffset;
+      const paymentYear = Math.floor(paymentIndex / 12);
+      const paymentMonth = ((paymentIndex % 12) + 12) % 12 + 1;
+
+      payloads.push({
+        name: data.name,
+        totalAmount: data.totalAmount.toString(),
+        remainingAmount: data.remainingAmount.toString(),
+        year,
+        month,
+        paymentYear,
+        paymentMonth,
+        accountId: data.accountId,
+        interestRate: data.interestRate !== undefined ? data.interestRate.toString() : undefined,
+        dueDate: data.dueDate,
+        minPayment: data.minPayment !== undefined ? data.minPayment.toString() : undefined,
+        status: data.status,
+      });
+    }
+
+    return payloads;
+  };
 
   const formattedTotal = useMemo(() => {
     if (!totalInput) return "";
@@ -98,6 +166,29 @@ export function AddDebtModal({ triggerClassName }: { triggerClassName?: string }
   };
 
   const onSubmit = (data: FormValues) => {
+    if (data.replicate) {
+      const payloads = buildReplicatedPayloads(data);
+      if (!payloads.length) {
+        toast({
+          title: "Replicação inválida",
+          description: "Informe o período para replicar a dívida.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      mutateBatch(payloads, {
+        onSuccess: () => {
+          setOpen(false);
+          reset({ status: "active", replicate: false });
+          setTotalInput("");
+          setRemainingInput("");
+          setMinPaymentInput("");
+        },
+      });
+      return;
+    }
+
     mutate(
       {
         name: data.name,
@@ -146,6 +237,7 @@ export function AddDebtModal({ triggerClassName }: { triggerClassName?: string }
           <input type="hidden" {...register("accountId")} />
           <input type="hidden" {...register("paymentMonth")} />
           <input type="hidden" {...register("paymentYear")} />
+          <input type="hidden" {...register("replicate")} />
 
           <div className="space-y-2">
             <Label>Descrição</Label>
@@ -278,8 +370,56 @@ export function AddDebtModal({ triggerClassName }: { triggerClassName?: string }
             </Select>
           </div>
 
-          <Button type="submit" className="w-full" disabled={isPending}>
-            {isPending ? "Salvando..." : "Salvar"}
+          <div className="rounded-lg border border-dashed p-3 space-y-3">
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <Label>Replicar dívida</Label>
+                <p className="text-xs text-muted-foreground">
+                  Repete o mesmo valor em vários meses.
+                </p>
+              </div>
+              <Switch
+                checked={replicate}
+                onCheckedChange={(checked) => setValue("replicate", checked)}
+              />
+            </div>
+
+            {replicate && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Replicar até (ano)</Label>
+                  <Input type="number" {...register("replicateUntilYear")} />
+                  {errors.replicateUntilYear && (
+                    <p className="text-xs text-destructive">{errors.replicateUntilYear.message}</p>
+                  )}
+                </div>
+                <div className="space-y-2">
+                  <Label>Replicar até (mês)</Label>
+                  <Select
+                    defaultValue={String(currentMonth)}
+                    onValueChange={(val) => setValue("replicateUntilMonth", Number(val))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {Array.from({ length: 12 }, (_, i) => i + 1).map((month) => (
+                        <SelectItem key={month} value={String(month)}>
+                          {new Date(2023, month - 1, 1).toLocaleString("pt-BR", { month: "short" })}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                {errors.replicateUntilMonth && (
+                  <p className="text-xs text-destructive">{errors.replicateUntilMonth.message}</p>
+                )}
+              </div>
+            )}
+          </div>
+
+          <Button type="submit" className="w-full" disabled={isPending || isBatchPending}>
+            {isPending || isBatchPending ? "Salvando..." : "Salvar"}
           </Button>
         </form>
       </DialogContent>

@@ -80,6 +80,38 @@ export function useCreateDebt() {
   });
 }
 
+export function useCreateDebtsBatch() {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: async (payloads: DebtPayload[]) => {
+      return Promise.all(
+        payloads.map((payload) =>
+          apiSend(
+            api.debts.create.path,
+            "POST",
+            api.debts.create.responses[201],
+            formatDebtPayload(payload)
+          )
+        )
+      );
+    },
+    onSuccess: (_data, payloads) => {
+      queryClient.invalidateQueries({ queryKey: [api.debts.list.path] });
+      queryClient.invalidateQueries({ queryKey: [api.accounts.list.path] });
+      queryClient.invalidateQueries({ queryKey: [api.dashboard.get.path] });
+      toast({
+        title: "Dívidas criadas",
+        description: `${payloads.length} registros salvos com sucesso.`,
+      });
+    },
+    onError: (err) => {
+      toast({ title: "Erro", description: err.message, variant: "destructive" });
+    },
+  });
+}
+
 type UpdateDebtPayload = {
   id: number;
   payload: Partial<DebtPayload>;

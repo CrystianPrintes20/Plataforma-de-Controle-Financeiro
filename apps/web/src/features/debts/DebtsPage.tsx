@@ -134,7 +134,9 @@ export default function DebtsPage() {
         if (debt.status === "paid") {
           totalsByMonth[idx].paid += Number(debt.totalAmount);
         } else {
-          totalsByMonth[idx].open += Number(debt.remainingAmount);
+          const remaining = Number(debt.remainingAmount);
+          const fallback = Number(debt.totalAmount);
+          totalsByMonth[idx].open += remaining > 0 ? remaining : fallback;
         }
       }
     });
@@ -153,7 +155,9 @@ export default function DebtsPage() {
     filteredDebts.forEach((debt) => {
       const idx = buckets.findIndex((item) => item.key === debt.status);
       if (idx >= 0) {
-        const value = debt.status === "paid" ? 0 : Number(debt.remainingAmount);
+        const remaining = Number(debt.remainingAmount);
+        const fallback = Number(debt.totalAmount);
+        const value = debt.status === "paid" ? 0 : remaining > 0 ? remaining : fallback;
         buckets[idx].value += value;
       }
     });
