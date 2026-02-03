@@ -92,4 +92,51 @@ export function registerInvestmentRoutes(
     await service.delete(Number(req.params.id), userId);
     res.status(HTTP_STATUS.NO_CONTENT).send();
   });
+
+  app.post(api.investments.entries.create.path, isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user!.claims.sub;
+      const input = api.investments.entries.create.input.parse({ ...req.body, userId });
+      const entry = await service.createEntry(userId, input);
+      if (!entry) {
+        return res
+          .status(HTTP_STATUS.NOT_FOUND)
+          .json(fail("Investment not found"));
+      }
+      res.status(HTTP_STATUS.CREATED).json(ok(entry));
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res
+          .status(HTTP_STATUS.BAD_REQUEST)
+          .json(fail("Validation error", err.errors));
+      }
+      throw err;
+    }
+  });
+
+  app.get(api.investments.entries.list.path, isAuthenticated, async (req: any, res) => {
+    const userId = req.user!.claims.sub;
+    const input = api.investments.entries.list.input?.parse(req.query) as { year?: number } | undefined;
+    const entries = await service.listEntries(userId, input?.year);
+    res.json(ok(entries));
+  });
+
+  app.put(api.investments.entries.update.path, isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user!.claims.sub;
+      const input = api.investments.entries.update.input.parse(req.body);
+      const entry = await service.updateEntry(userId, Number(req.params.id), input);
+      if (!entry) {
+        return res.status(HTTP_STATUS.NOT_FOUND).json(fail("Entry not found"));
+      }
+      res.json(ok(entry));
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res
+          .status(HTTP_STATUS.BAD_REQUEST)
+          .json(fail("Validation error", err.errors));
+      }
+      throw err;
+    }
+  });
 }

@@ -12,7 +12,7 @@ services:
       AUTH_PASSWORD: ${AUTH_PASSWORD:-dev-password}
       CURRENCY: ${CURRENCY:-BRL}
     ports:
-      - "5000:5000"
+      - "5003:5003"
     command: sh -c "npm run db:push && NODE_ENV=development npx tsx watch apps/api/src/index.ts"
     volumes:
       - .:/app

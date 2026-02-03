@@ -13,7 +13,7 @@ const envSchema = z.object({
   ),
   PORT: z.preprocess(
     emptyToUndefined,
-    z.coerce.number().int().positive().default(5000)
+    z.coerce.number().int().positive().default(5003)
   ),
   DATABASE_URL: z.preprocess(emptyToUndefined, z.string().min(1)),
   SESSION_SECRET: z.preprocess(

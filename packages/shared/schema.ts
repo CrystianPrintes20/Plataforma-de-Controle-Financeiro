@@ -98,6 +98,24 @@ export const insertInvestmentSchema = createInsertSchema(investments).omit({ id:
 export type Investment = typeof investments.$inferSelect;
 export type InsertInvestment = z.infer<typeof insertInvestmentSchema>;
 
+// --- Investment Entries ---
+export const investmentEntries = pgTable("investment_entries", {
+  id: serial("id").primaryKey(),
+  userId: text("user_id").notNull().references(() => users.id),
+  investmentId: integer("investment_id").notNull().references(() => investments.id),
+  year: integer("year").notNull(),
+  month: integer("month").notNull(),
+  value: numeric("value", { precision: 12, scale: 2 }).notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertInvestmentEntrySchema = createInsertSchema(investmentEntries).omit({
+  id: true,
+  createdAt: true,
+});
+export type InvestmentEntry = typeof investmentEntries.$inferSelect;
+export type InsertInvestmentEntry = z.infer<typeof insertInvestmentEntrySchema>;
+
 // --- Goals ---
 export const goals = pgTable("goals", {
   id: serial("id").primaryKey(),
@@ -174,6 +192,11 @@ export const debtsRelations = relations(debts, ({ one }) => ({
 
 export const investmentsRelations = relations(investments, ({ one }) => ({
   user: one(users, { fields: [investments.userId], references: [users.id] }),
+}));
+
+export const investmentEntriesRelations = relations(investmentEntries, ({ one }) => ({
+  user: one(users, { fields: [investmentEntries.userId], references: [users.id] }),
+  investment: one(investments, { fields: [investmentEntries.investmentId], references: [investments.id] }),
 }));
 
 export const goalsRelations = relations(goals, ({ one }) => ({

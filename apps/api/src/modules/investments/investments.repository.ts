@@ -2,9 +2,12 @@ import {
   investments,
   type Investment,
   type InsertInvestment,
+  investmentEntries,
+  type InvestmentEntry,
+  type InsertInvestmentEntry,
 } from "@shared/schema";
 import { db } from "../../db";
-import { and, eq } from "drizzle-orm";
+import { and, desc, eq } from "drizzle-orm";
 
 export class InvestmentsRepository {
   listByUser(userId: string): Promise<Investment[]> {
@@ -38,5 +41,68 @@ export class InvestmentsRepository {
     await db
       .delete(investments)
       .where(and(eq(investments.id, id), eq(investments.userId, userId)));
+  }
+
+  async createEntry(data: InsertInvestmentEntry): Promise<InvestmentEntry> {
+    const [entry] = await db.insert(investmentEntries).values(data).returning();
+    return entry;
+  }
+
+  async getEntryByMonth(
+    investmentId: number,
+    year: number,
+    month: number
+  ): Promise<InvestmentEntry | undefined> {
+    const [entry] = await db
+      .select()
+      .from(investmentEntries)
+      .where(
+        and(
+          eq(investmentEntries.investmentId, investmentId),
+          eq(investmentEntries.year, year),
+          eq(investmentEntries.month, month)
+        )
+      );
+    return entry;
+  }
+
+  async updateEntry(
+    id: number,
+    updates: Partial<InsertInvestmentEntry>
+  ): Promise<InvestmentEntry | undefined> {
+    const [entry] = await db
+      .update(investmentEntries)
+      .set(updates)
+      .where(eq(investmentEntries.id, id))
+      .returning();
+    return entry;
+  }
+
+  async listEntriesByUser(userId: string, year?: number): Promise<InvestmentEntry[]> {
+    if (typeof year === "number") {
+      return db
+        .select()
+        .from(investmentEntries)
+        .where(and(eq(investmentEntries.userId, userId), eq(investmentEntries.year, year)));
+    }
+    return db
+      .select()
+      .from(investmentEntries)
+      .where(eq(investmentEntries.userId, userId));
+  }
+
+  async getLatestEntryByInvestment(investmentId: number): Promise<InvestmentEntry | undefined> {
+    const [entry] = await db
+      .select()
+      .from(investmentEntries)
+      .where(eq(investmentEntries.investmentId, investmentId))
+      .orderBy(desc(investmentEntries.year), desc(investmentEntries.month))
+      .limit(1);
+    return entry;
+  }
+
+  async getEntryById(id: number): Promise<InvestmentEntry | undefined> {
+    const [entry] = await db.select().from(investmentEntries).where(eq(investmentEntries.id, id));
+    return entry;
   }
 }

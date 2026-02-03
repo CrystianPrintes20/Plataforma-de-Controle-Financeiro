@@ -5,6 +5,7 @@ import {
   insertTransactionSchema, transactions,
   insertDebtSchema, debts,
   insertInvestmentSchema, investments,
+  insertInvestmentEntrySchema, investmentEntries,
   insertGoalSchema, goals,
   insertIncomeEntrySchema, incomeEntries
 } from './schema';
@@ -271,6 +272,40 @@ export const api = {
         400: errorSchemas.validation,
         404: errorSchemas.notFound,
         401: errorSchemas.unauthorized,
+      },
+    },
+    entries: {
+      list: {
+        method: 'GET' as const,
+        path: '/api/investments/entries',
+        input: z.object({
+          year: z.coerce.number().optional(),
+        }).optional(),
+        responses: {
+          200: z.array(z.custom<typeof investmentEntries.$inferSelect>()),
+          401: errorSchemas.unauthorized,
+        },
+      },
+      create: {
+        method: 'POST' as const,
+        path: '/api/investments/entries',
+        input: insertInvestmentEntrySchema,
+        responses: {
+          201: z.custom<typeof investmentEntries.$inferSelect>(),
+          400: errorSchemas.validation,
+          401: errorSchemas.unauthorized,
+        },
+      },
+      update: {
+        method: 'PUT' as const,
+        path: '/api/investments/entries/:id',
+        input: insertInvestmentEntrySchema.partial(),
+        responses: {
+          200: z.custom<typeof investmentEntries.$inferSelect>(),
+          404: errorSchemas.notFound,
+          400: errorSchemas.validation,
+          401: errorSchemas.unauthorized,
+        },
       },
     },
     delete: {

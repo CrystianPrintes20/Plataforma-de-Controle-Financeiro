@@ -129,3 +129,36 @@ export function useDeleteInvestment() {
     },
   });
 }
+
+export function useInvestmentEntries(year?: number) {
+  return useQuery({
+    queryKey: [api.investments.entries.list.path, year],
+    queryFn: async () => {
+      const url = new URL(api.investments.entries.list.path, window.location.origin);
+      if (year) url.searchParams.set("year", String(year));
+      return apiGet(url.toString(), api.investments.entries.list.responses[200]);
+    },
+  });
+}
+
+export function useUpdateInvestmentEntry() {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: async ({ id, payload }: { id: number; payload: { value: number } }) => {
+      const url = buildUrl(api.investments.entries.update.path, { id });
+      return apiSend(url, "PUT", api.investments.entries.update.responses[200], {
+        value: String(payload.value),
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [api.investments.entries.list.path] });
+      queryClient.invalidateQueries({ queryKey: [api.investments.list.path] });
+      toast({ title: "Atualizado", description: "Histórico atualizado." });
+    },
+    onError: (err) => {
+      toast({ title: "Erro", description: err.message, variant: "destructive" });
+    },
+  });
+}

@@ -1,4 +1,9 @@
-import type { Investment, InsertInvestment, InsertTransaction } from "@shared/schema";
+import type {
+  Investment,
+  InsertInvestment,
+  InsertInvestmentEntry,
+  InsertTransaction,
+} from "@shared/schema";
 import { AccountsRepository } from "../accounts/accounts.repository";
 import { TransactionsRepository } from "../transactions/transactions.repository";
 import { InvestmentsRepository } from "./investments.repository";
@@ -28,6 +33,53 @@ export class InvestmentsService {
 
   delete(id: number, userId: string): Promise<void> {
     return this.repo.delete(id, userId);
+  }
+
+  async createEntry(userId: string, input: InsertInvestmentEntry) {
+    const investment = await this.repo.getById(input.investmentId);
+    if (!investment || investment.userId !== userId) return undefined;
+
+    const existing = await this.repo.getEntryByMonth(input.investmentId, input.year, input.month);
+    const nextValue = existing
+      ? Number(existing.value) + Number(input.value)
+      : Number(input.value);
+
+    const entry = existing
+      ? await this.repo.updateEntry(existing.id, { value: nextValue.toString() })
+      : await this.repo.createEntry({ ...input, userId });
+    if (!entry) return undefined;
+    const latest = await this.repo.getLatestEntryByInvestment(input.investmentId);
+
+    if (latest && latest.year === entry.year && latest.month === entry.month) {
+      await this.repo.update(input.investmentId, userId, {
+        currentValue: String(entry.value),
+        lastUpdated: new Date(),
+      });
+    }
+
+    return entry;
+  }
+
+  listEntries(userId: string, year?: number) {
+    return this.repo.listEntriesByUser(userId, year);
+  }
+
+  async updateEntry(userId: string, id: number, input: Partial<InsertInvestmentEntry>) {
+    const existing = await this.repo.getEntryById(id);
+    if (!existing || existing.userId !== userId) return undefined;
+
+    const updated = await this.repo.updateEntry(id, input);
+    if (!updated) return undefined;
+
+    const latest = await this.repo.getLatestEntryByInvestment(updated.investmentId);
+    if (latest) {
+      await this.repo.update(updated.investmentId, userId, {
+        currentValue: String(latest.value),
+        lastUpdated: new Date(),
+      });
+    }
+
+    return updated;
   }
 
   async applyInvestment(
