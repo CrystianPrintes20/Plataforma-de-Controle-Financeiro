@@ -8,8 +8,8 @@ export class DebtsService {
     private readonly accountsRepo = new AccountsRepository()
   ) {}
 
-  private shouldApplyToBalance(entry: Pick<Debt, "status" | "month" | "accountId">) {
-    return entry.status === "paid" && !!entry.accountId && entry.month >= 2;
+  private shouldApplyToBalance(entry: Pick<Debt, "status" | "paymentMonth" | "accountId">) {
+    return entry.status === "paid" && !!entry.accountId && entry.paymentMonth >= 2;
   }
 
   private normalizeInput(input: InsertDebt): InsertDebt {

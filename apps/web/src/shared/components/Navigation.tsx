@@ -13,7 +13,7 @@ export function Navigation() {
     { href: "/transactions", label: "Transações", icon: Receipt },
     { href: "/accounts", label: "Contas", icon: Wallet },
     { href: "/income", label: "Entradas", icon: TrendingUp },
-    { href: "/investments", label: "Investimentos", icon: TrendingUp },
+    { href: "/investments", label: "Investimentos", icon: PieChart },
     { href: "/debts", label: "Dívidas", icon: CreditCard },
     { href: "/goals", label: "Metas", icon: Target },
     { href: "/settings", label: "Configurações", icon: Settings },

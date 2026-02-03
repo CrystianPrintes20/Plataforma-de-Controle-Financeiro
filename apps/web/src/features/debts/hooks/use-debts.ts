@@ -16,6 +16,8 @@ type DebtPayload = {
   remainingAmount: string | number;
   year: number;
   month: number;
+  paymentYear: number;
+  paymentMonth: number;
   accountId?: number;
   interestRate?: string | number;
   dueDate?: number;
@@ -29,6 +31,8 @@ const formatDebtPayload = (payload: DebtPayload) => ({
   remainingAmount: String(payload.remainingAmount),
   year: payload.year,
   month: payload.month,
+  paymentYear: payload.paymentYear,
+  paymentMonth: payload.paymentMonth,
   accountId: payload.accountId,
   interestRate: payload.interestRate !== undefined ? String(payload.interestRate) : undefined,
   dueDate: payload.dueDate ?? undefined,
@@ -42,6 +46,8 @@ const formatPartialDebtPayload = (payload: Partial<DebtPayload>) => ({
   ...(payload.remainingAmount !== undefined ? { remainingAmount: String(payload.remainingAmount) } : {}),
   ...(payload.year !== undefined ? { year: payload.year } : {}),
   ...(payload.month !== undefined ? { month: payload.month } : {}),
+  ...(payload.paymentYear !== undefined ? { paymentYear: payload.paymentYear } : {}),
+  ...(payload.paymentMonth !== undefined ? { paymentMonth: payload.paymentMonth } : {}),
   ...(payload.accountId !== undefined ? { accountId: payload.accountId } : {}),
   ...(payload.interestRate !== undefined ? { interestRate: String(payload.interestRate) } : {}),
   ...(payload.dueDate !== undefined ? { dueDate: payload.dueDate } : {}),

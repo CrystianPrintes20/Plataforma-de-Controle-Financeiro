@@ -199,7 +199,7 @@ export default function DebtsPage() {
               </Button>
             ))}
           </div>
-          <div className="flex flex-1 justify-end gap-2">
+          <div className="flex flex-1 flex-wrap justify-end gap-2">
             <Select
               value={selectedYear}
               onValueChange={(value) => {
@@ -208,7 +208,7 @@ export default function DebtsPage() {
               }}
             >
               <SelectTrigger className="w-[140px] bg-white/70">
-                <SelectValue />
+                <SelectValue placeholder="Ano" />
               </SelectTrigger>
               <SelectContent>
                 {(years.length > 0
@@ -221,19 +221,22 @@ export default function DebtsPage() {
                 ))}
               </SelectContent>
             </Select>
-            <Select value={selectedMonth} onValueChange={setSelectedMonth}>
-              <SelectTrigger className="w-[140px] bg-white/70">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="0">Todos</SelectItem>
-                {Array.from({ length: 12 }, (_, i) => i + 1).map((month) => (
-                  <SelectItem key={month} value={String(month)}>
-                    {new Date(2023, month - 1, 1).toLocaleString("pt-BR", { month: "short" })}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-muted-foreground">Competência</span>
+              <Select value={selectedMonth} onValueChange={setSelectedMonth}>
+                <SelectTrigger className="w-[140px] bg-white/70">
+                  <SelectValue placeholder="Mês" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="0">Todos</SelectItem>
+                  {Array.from({ length: 12 }, (_, i) => i + 1).map((month) => (
+                    <SelectItem key={month} value={String(month)}>
+                      {new Date(2023, month - 1, 1).toLocaleString("pt-BR", { month: "short" })}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
         </div>
       </div>
@@ -413,6 +416,9 @@ export default function DebtsPage() {
                               <Badge variant="outline">
                                 {new Date(2023, debt.month - 1, 1).toLocaleString("pt-BR", { month: "short" })} / {debt.year}
                               </Badge>
+                              <Badge variant="outline">
+                                Pagamento {new Date(2023, debt.paymentMonth - 1, 1).toLocaleString("pt-BR", { month: "short" })} / {debt.paymentYear}
+                              </Badge>
                             </div>
                             <p className="text-xs text-muted-foreground">
                               {debt.dueDate ? `Vencimento: dia ${debt.dueDate}` : "Sem vencimento informado"}
@@ -496,7 +502,12 @@ export default function DebtsPage() {
                                 <div className="flex items-center gap-2">
                                   <p className="font-semibold text-foreground">{debt.name}</p>
                                   <Badge variant={statusVariant(debt.status)}>{statusLabel(debt.status)}</Badge>
-                                  <Badge variant="outline">{debt.year}</Badge>
+                                  <Badge variant="outline">
+                                    {new Date(2023, debt.month - 1, 1).toLocaleString("pt-BR", { month: "short" })} / {debt.year}
+                                  </Badge>
+                                  <Badge variant="outline">
+                                    Pagamento {new Date(2023, debt.paymentMonth - 1, 1).toLocaleString("pt-BR", { month: "short" })} / {debt.paymentYear}
+                                  </Badge>
                                 </div>
                                 <p className="text-xs text-muted-foreground">
                                   {debt.dueDate ? `Vencimento: dia ${debt.dueDate}` : "Sem vencimento informado"}

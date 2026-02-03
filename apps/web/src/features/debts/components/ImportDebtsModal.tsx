@@ -229,6 +229,8 @@ export function ImportDebtsModal({ triggerClassName }: { triggerClassName?: stri
           for (let monthIndex = 0; monthIndex < 12; monthIndex += 1) {
             const value = monthValues[monthIndex];
             if (value === null) continue;
+            const paymentMonth = monthIndex === 11 ? 1 : monthIndex + 2;
+            const paymentYear = monthIndex === 11 ? rowYear + 1 : rowYear;
             const remaining = status === "paid" ? 0 : value;
             await apiSend(api.debts.create.path, "POST", api.debts.create.responses[201], {
               name: row.data.descricao,
@@ -236,6 +238,8 @@ export function ImportDebtsModal({ triggerClassName }: { triggerClassName?: stri
               remainingAmount: String(remaining),
               year: rowYear,
               month: monthIndex + 1,
+              paymentYear,
+              paymentMonth,
               accountId,
               status,
             });
@@ -260,6 +264,8 @@ export function ImportDebtsModal({ triggerClassName }: { triggerClassName?: stri
             status,
             year: rowYear,
             month: monthValue,
+            paymentYear: monthValue === 12 ? rowYear + 1 : rowYear,
+            paymentMonth: monthValue === 12 ? 1 : monthValue + 1,
             accountId,
           });
         }

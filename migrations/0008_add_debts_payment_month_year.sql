@@ -1,0 +1,2 @@
+ALTER TABLE "debts" ADD COLUMN "payment_year" integer NOT NULL DEFAULT EXTRACT(YEAR FROM NOW());
+ALTER TABLE "debts" ADD COLUMN "payment_month" integer NOT NULL DEFAULT EXTRACT(MONTH FROM NOW());

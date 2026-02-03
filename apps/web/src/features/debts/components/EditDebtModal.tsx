@@ -25,6 +25,8 @@ const formSchema = z.object({
   remainingAmount: z.coerce.number().min(0, "Informe o saldo restante"),
   year: z.coerce.number().min(2000),
   month: z.coerce.number().min(1).max(12),
+  paymentYear: z.coerce.number().min(2000),
+  paymentMonth: z.coerce.number().min(1).max(12),
   accountId: optionalNumber(z.number()),
   interestRate: optionalNumber(z.number().min(0)),
   dueDate: optionalNumber(z.number().int().min(1).max(31)),
@@ -58,6 +60,8 @@ export function EditDebtModal({
       remainingAmount: Number(debt.remainingAmount),
       year: debt.year ?? new Date().getFullYear(),
       month: debt.month ?? new Date().getMonth() + 1,
+      paymentYear: debt.paymentYear ?? new Date().getFullYear(),
+      paymentMonth: debt.paymentMonth ?? new Date().getMonth() + 1,
       accountId: debt.accountId ?? undefined,
       interestRate: debt.interestRate ? Number(debt.interestRate) : undefined,
       dueDate: debt.dueDate ?? undefined,
@@ -75,6 +79,8 @@ export function EditDebtModal({
       remainingAmount: Number(debt.remainingAmount),
       year: debt.year ?? new Date().getFullYear(),
       month: debt.month ?? new Date().getMonth() + 1,
+      paymentYear: debt.paymentYear ?? new Date().getFullYear(),
+      paymentMonth: debt.paymentMonth ?? new Date().getMonth() + 1,
       accountId: debt.accountId ?? undefined,
       interestRate: debt.interestRate ? Number(debt.interestRate) : undefined,
       dueDate: debt.dueDate ?? undefined,
@@ -143,6 +149,8 @@ export function EditDebtModal({
           remainingAmount: data.remainingAmount.toString(),
           year: data.year,
           month: data.month,
+          paymentYear: data.paymentYear,
+          paymentMonth: data.paymentMonth,
           accountId: data.accountId,
           interestRate: data.interestRate !== undefined ? data.interestRate.toString() : undefined,
           dueDate: data.dueDate,
@@ -169,6 +177,8 @@ export function EditDebtModal({
           <input type="hidden" {...register("status")} />
           <input type="hidden" {...register("month")} />
           <input type="hidden" {...register("accountId")} />
+          <input type="hidden" {...register("paymentYear")} />
+          <input type="hidden" {...register("paymentMonth")} />
 
           <div className="space-y-2">
             <Label>Descrição</Label>
@@ -203,12 +213,12 @@ export function EditDebtModal({
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="space-y-2">
-              <Label>Ano</Label>
+              <Label>Ano (competência)</Label>
               <Input type="number" {...register("year")} />
               {errors.year && <p className="text-xs text-destructive">{errors.year.message}</p>}
             </div>
             <div className="space-y-2">
-              <Label>Mês</Label>
+              <Label>Mês (competência)</Label>
               <Select
                 value={String(watch("month") ?? debt.month ?? new Date().getMonth() + 1)}
                 onValueChange={(val) => setValue("month", Number(val))}
@@ -243,6 +253,33 @@ export function EditDebtModal({
                 onChange={(event) => handleOptionalAmountChange(event.target.value, setMinPaymentInput, "minPayment")}
                 placeholder={formatter.format(0)}
               />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>Ano de pagamento</Label>
+              <Input type="number" {...register("paymentYear")} />
+              {errors.paymentYear && <p className="text-xs text-destructive">{errors.paymentYear.message}</p>}
+            </div>
+            <div className="space-y-2">
+              <Label>Mês de pagamento</Label>
+              <Select
+                value={String(watch("paymentMonth") ?? debt.paymentMonth ?? new Date().getMonth() + 1)}
+                onValueChange={(val) => setValue("paymentMonth", Number(val))}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {Array.from({ length: 12 }, (_, i) => i + 1).map((month) => (
+                    <SelectItem key={month} value={String(month)}>
+                      {new Date(2023, month - 1, 1).toLocaleString("pt-BR", { month: "short" })}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {errors.paymentMonth && <p className="text-xs text-destructive">{errors.paymentMonth.message}</p>}
             </div>
           </div>
 

@@ -1,10 +1,13 @@
 import { useDashboard } from "@/features/dashboard";
+import { useIncomeEntries } from "@/features/income";
+import { useDebts } from "@/features/debts";
+import { useInvestments } from "@/features/investments";
 import { KPICard } from "@/shared/components/KPICard";
 import { useMoneyFormatter } from "@/shared";
 import { AddTransactionModal } from "@/features/transactions";
 import { AppShell } from "@/app/AppShell";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from "recharts";
-import { Wallet, TrendingUp, TrendingDown, PiggyBank, ArrowUpRight, ArrowDownRight } from "lucide-react";
+import { Wallet, TrendingUp, TrendingDown, PiggyBank, ArrowUpRight, ArrowDownRight, CreditCard, LineChart } from "lucide-react";
 import { format } from "date-fns";
 import { Skeleton } from "@/shared/ui/skeleton";
 import { Card, CardHeader, CardTitle, CardContent } from "@/shared/ui/card";
@@ -12,6 +15,9 @@ import { cn } from "@/shared/lib/utils";
 
 export default function Dashboard() {
   const { data, isLoading } = useDashboard();
+  const { data: incomeEntries } = useIncomeEntries();
+  const { data: debts } = useDebts();
+  const { data: investments } = useInvestments();
   const { formatter } = useMoneyFormatter();
 
   if (isLoading) return <DashboardSkeleton />;
@@ -21,6 +27,21 @@ export default function Dashboard() {
     amount: Number(t.amount),
     type: t.type
   })).reverse() || [];
+
+  const now = new Date();
+  const currentYear = now.getFullYear();
+  const currentMonth = now.getMonth() + 1;
+
+  const incomeMonthlyTotal = (incomeEntries ?? [])
+    .filter((entry) => entry.year === currentYear && entry.month === currentMonth)
+    .reduce((sum, entry) => sum + Number(entry.amount), 0);
+
+  const openDebtsTotal = (debts ?? [])
+    .filter((debt) => debt.paymentYear === currentYear && debt.paymentMonth === currentMonth && debt.status !== "paid")
+    .reduce((sum, debt) => sum + Number(debt.remainingAmount), 0);
+
+  const investmentsTotal = (investments ?? [])
+    .reduce((sum, inv) => sum + Number(inv.currentValue), 0);
 
   return (
     <AppShell>
@@ -62,6 +83,53 @@ export default function Dashboard() {
             trend="-1.2%"
             trendUp={true} // Good that expenses are down? Context matters but using Up color for "Good"
           />
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <Card className="border-border/50 shadow-sm">
+            <CardHeader className="space-y-1">
+              <CardTitle className="text-base">Entradas do mês</CardTitle>
+              <p className="text-xs text-muted-foreground">Receitas fixas cadastradas.</p>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center justify-between">
+                <div className="text-2xl font-semibold">{formatter.format(incomeMonthlyTotal)}</div>
+                <div className="rounded-xl bg-emerald-500/10 p-2 text-emerald-600">
+                  <TrendingUp className="h-5 w-5" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-border/50 shadow-sm">
+            <CardHeader className="space-y-1">
+              <CardTitle className="text-base">Dívidas em aberto</CardTitle>
+              <p className="text-xs text-muted-foreground">Somatório do mês atual.</p>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center justify-between">
+                <div className="text-2xl font-semibold">{formatter.format(openDebtsTotal)}</div>
+                <div className="rounded-xl bg-red-500/10 p-2 text-red-600">
+                  <CreditCard className="h-5 w-5" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-border/50 shadow-sm">
+            <CardHeader className="space-y-1">
+              <CardTitle className="text-base">Investimentos</CardTitle>
+              <p className="text-xs text-muted-foreground">Valor total atual.</p>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center justify-between">
+                <div className="text-2xl font-semibold">{formatter.format(investmentsTotal)}</div>
+                <div className="rounded-xl bg-blue-500/10 p-2 text-blue-600">
+                  <LineChart className="h-5 w-5" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">

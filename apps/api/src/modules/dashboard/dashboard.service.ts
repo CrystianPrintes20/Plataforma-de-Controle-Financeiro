@@ -98,10 +98,10 @@ export class DashboardService {
     );
 
     const debtsList = await this.debtsRepo.listByUser(userId);
-    const debtsValue = debtsList.reduce(
-      (sum, debt) => sum + Number(debt.remainingAmount),
-      0
-    );
+    const debtsValue = debtsList.reduce((sum, debt) => {
+      if (debt.status === "paid") return sum;
+      return sum + Number(debt.remainingAmount);
+    }, 0);
 
     const netWorth = totalBalance + investmentsValue - debtsValue;
 
